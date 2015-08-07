@@ -106,10 +106,10 @@ public class FileSegment {
 		 return this.job.config.getSubquerystatement();
 	}
 	 
-	 public Object getEndoffset() {
+	 public long getEndoffset() {
 			return taskInfo.getEndoffset();
 		}
-	 public Object getStartoffset() {
+	 public long getStartoffset() {
 			return taskInfo.getStartoffset();
 		}
 	 public long getPagesize() {

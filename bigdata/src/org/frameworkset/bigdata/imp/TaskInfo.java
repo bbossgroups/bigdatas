@@ -2,11 +2,11 @@ package org.frameworkset.bigdata.imp;
 
 
 public class TaskInfo  implements java.io.Serializable{
-	Object startoffset;
-	Object endoffset;
+	long startoffset;
+	long endoffset;
 	
-	Object startid;
-	Object endid;
+	long startid;
+	long endid;
 	long pagesize;
 	private String subpartition;
 	private boolean issubpartition;
@@ -21,16 +21,16 @@ public class TaskInfo  implements java.io.Serializable{
 	 */
 	String taskNo;
 	
-	public Object getStartoffset() {
+	public long getStartoffset() {
 		return startoffset;
 	}
-	public void setStartoffset(Object startoffset) {
+	public void setStartoffset(long startoffset) {
 		this.startoffset = startoffset;
 	}
-	public Object getEndoffset() {
+	public long getEndoffset() {
 		return endoffset;
 	}
-	public void setEndoffset(Object endoffset) {
+	public void setEndoffset(long endoffset) {
 		this.endoffset = endoffset;
 	}
 	public String getFilename() {
