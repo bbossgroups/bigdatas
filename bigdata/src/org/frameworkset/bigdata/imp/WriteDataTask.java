@@ -382,18 +382,36 @@ public class WriteDataTask {
 		 		tm.begin(TransactionManager.RW_TRANSACTION);
 			 	if(fileSegment.usepartition())
 			 	{
-			 		SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
-			 			
-						@Override
-						public void handleRow(ResultSet row) throws Exception {
-							if(genFileHelper.isforceStop())
-								throw new ForceStopException();
-							write(  fileSegment,row);
-							if(genFileHelper.isforceStop())
-								throw new ForceStopException();
-						}
-			    		
-			    	}, fileSegment.getDBName(), fileSegment.getQuerystatement());
+			 		if(!fileSegment.partitiondataraged())
+			 		{
+				 		SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
+				 			
+							@Override
+							public void handleRow(ResultSet row) throws Exception {
+								if(genFileHelper.isforceStop())
+									throw new ForceStopException();
+								write(  fileSegment,row);
+								if(genFileHelper.isforceStop())
+									throw new ForceStopException();
+							}
+				    		
+				    	}, fileSegment.getDBName(), fileSegment.getQuerystatement());
+			 		}
+			 		else
+			 		{
+			 			SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
+			 				
+							@Override
+							public void handleRow(ResultSet row) throws Exception {
+								if(genFileHelper.isforceStop())
+									throw new ForceStopException();
+								write(  fileSegment,row);
+								if(genFileHelper.isforceStop())
+									throw new ForceStopException();
+							}
+				    		
+				    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),fileSegment.getEndoffset(),fileSegment.getStartoffset());
+			 		}
 			 	}
 			 	else if(!fileSegment.usepagine())//采用主键分区模式
 			 	{

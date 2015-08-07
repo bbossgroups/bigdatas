@@ -31,6 +31,8 @@ import org.jgroups.Address;
 import com.frameworkset.common.poolman.DBUtil;
 import com.frameworkset.common.poolman.PreparedDBUtil;
 import com.frameworkset.common.poolman.SQLExecutor;
+import com.frameworkset.orm.annotation.TransactionType;
+import com.frameworkset.orm.transaction.TransactionManager;
 import com.frameworkset.util.SimpleStringUtil;
 
 public class HDFSUploadData {
@@ -102,6 +104,7 @@ public class HDFSUploadData {
 	private String tablename;
 	private String schema;
 	private String pkName;
+	private String pkType;
 	private String columns;
 	private String filebasename;
 	// 切分的数据块
@@ -199,6 +202,7 @@ public class HDFSUploadData {
 		config.hdfsserver = this.hdfsserver;
 		config.localdirpath = this.localpath;
 		config.pkname = this.pkName;
+		config.pktype = this.pkType;
 		config.tablename = this.tablename;
 		config.geneworkthreads = this.geneworkthreads;
 		config.uploadeworkthreads = this.uploadeworkthreads;
@@ -269,7 +273,16 @@ public class HDFSUploadData {
 				sqlbuilder.append(" from  ");
 				if (this.schema != null && !this.schema.equals(""))
 					sqlbuilder.append(config.schema).append(".");
-				sqlbuilder.append(config.tablename).append(" #{partition}");
+//				sqlbuilder.append(config.tablename).append(" #{partition}");
+				if(datablocks <= 0)
+					sqlbuilder.append(config.tablename).append(" #{partition}");
+				else
+				{
+					sqlbuilder.append(config.tablename).append(" #{partition}").append(" where ")
+					.append(config.pkname).append("<=? and ")
+					.append(config.pkname).append(">=?");
+					config.setPartitiondataraged(true);
+				}
 				config.setQuerystatement(sqlbuilder.toString());
 			} else {
 				config.setQuerystatement(this.querystatement);
@@ -425,6 +438,7 @@ public class HDFSUploadData {
 				"tablename");
 		String schema = context.getStringExtendAttribute(jobname, "schema");
 		String pkName = context.getStringExtendAttribute(jobname, "pkname");
+		String pkType = context.getStringExtendAttribute(jobname, "pktype");
 		String columns = context.getStringExtendAttribute(jobname, "columns");
 		int datablocks = context.getIntExtendAttribute(jobname, "datablocks");
 
@@ -557,6 +571,7 @@ public class HDFSUploadData {
 		config.hdfsserver = hdfsserver;
 		config.localdirpath = localpath;
 		config.pkname = pkName;
+		config.pktype = pkType;
 		config.tablename = tablename;
 		config.geneworkthreads = geneworkthreads;
 		config.uploadeworkthreads = uploadeworkthreads;
@@ -611,7 +626,16 @@ public class HDFSUploadData {
 				sqlbuilder.append(" from  ");
 				if ( schema != null && ! schema.equals(""))
 					sqlbuilder.append(config.schema).append(".");
-				sqlbuilder.append(config.tablename).append(" #{partition}");
+				
+				if(datablocks <= 0)
+					sqlbuilder.append(config.tablename).append(" #{partition}");
+				else
+				{
+					sqlbuilder.append(config.tablename).append(" #{partition}").append(" where ")
+					.append(config.pkname).append("<=? and ")
+					.append(config.pkname).append(">=?");
+					config.setPartitiondataraged(true);
+				}
 				config.setQuerystatement(sqlbuilder.toString());
 			} else {
 				config.setQuerystatement( querystatement);
@@ -677,6 +701,20 @@ public class HDFSUploadData {
 	static class SplitTasks {
 		TaskInfo[] segments;
 		long segement = 0l;
+		
+		long startid =-9999;
+		long endid = -9999;
+		int nextpartpositionoffset;
+		
+	}
+	
+	private void spiltTask_(TaskInfo[] segments, long startid, long endid,
+			int datablocks, long segement, long div, boolean usepagine,
+			String filebasename, String parentTaskNo)
+	{
+		spiltTask_(segments, startid, endid,
+				datablocks, segement, div, usepagine,
+				filebasename, parentTaskNo,-1);
 	}
 
 	/**
@@ -691,10 +729,12 @@ public class HDFSUploadData {
 	 */
 	private void spiltTask_(TaskInfo[] segments, long startid, long endid,
 			int datablocks, long segement, long div, boolean usepagine,
-			String filebasename, String parentTaskNo) {
+			String filebasename, String parentTaskNo,int partpositionoffset) {
 		if (!usepagine) {
 			for (int i = 0; i < datablocks; i++) {
 				TaskInfo task = new TaskInfo();
+				task.startid = startid;
+				task.endid = endid;
 				if (i < div) {
 					task.startoffset = startid + i * segement + i;
 					task.endoffset = task.startoffset + segement - 1 + 1;
@@ -709,13 +749,16 @@ public class HDFSUploadData {
 					task.pagesize = task.endoffset - task.startoffset + 1;
 				}
 				task.filename = filebasename + "_" + i;
-				task.taskNo = parentTaskNo == null ? "" + i : parentTaskNo
+				int reali = partpositionoffset != -1?partpositionoffset+i:i;
+				task.taskNo = parentTaskNo == null ? "" + reali: parentTaskNo
 						+ "." + i;
 				segments[i] = task;
 			}
 		} else {
 			for (int i = 0; i < datablocks; i++) {
 				TaskInfo task = new TaskInfo();
+				task.startid = startid;
+				task.endid = endid;
 				if (i < div) {
 					task.startoffset = startid + i * segement + i;
 					// task.endoffset = task.startoffset + segement-1+1;
@@ -771,7 +814,7 @@ public class HDFSUploadData {
 				}
 			}
 			if (temp.size() > 0) {
-				if (!this.usepartition && this.subblocks > 0)// 如果需要对子任务进行切分，则需要进一步切分子任务，并且需要清除原来的大块数据对应的hdfs文件
+				if (this.subblocks > 0)// 如果需要对子任务进行切分，则需要进一步切分子任务，并且需要清除原来的大块数据对应的hdfs文件
 				{
 					// 进一步切分子任务
 					List<TaskInfo> subchunks = new ArrayList<TaskInfo>();
@@ -832,7 +875,7 @@ public class HDFSUploadData {
 				}
 			}
 			if (temp.size() > 0) {
-				if (!this.usepartition && this.subblocks > 0)// 如果需要对子任务进行切分，则需要进一步切分子任务，并且需要清除原来的大块数据对应的hdfs文件
+				if (this.subblocks > 0)// 如果需要对子任务进行切分，则需要进一步切分子任务，并且需要清除原来的大块数据对应的hdfs文件
 				{
 					// 进一步切分子任务
 					List<TaskInfo> subchunks = new ArrayList<TaskInfo>();
@@ -930,10 +973,10 @@ public class HDFSUploadData {
 				StringBuilder queryPartitions = new StringBuilder();
 				if(!SimpleStringUtil.isEmpty(schema))
 				{
-					queryPartitions.append("SELECT SUBPARTITION_NAME FROM ALL_TAB_SUBPARTITIONS WHERE TABLE_NAME=? and PARTITION_NAME=?");
+					queryPartitions.append("SELECT SUBPARTITION_NAME FROM ALL_TAB_SUBPARTITIONS WHERE TABLE_NAME=? and PARTITION_NAME=?   order by PARTITION_NAME");
 				}
 				else
-					queryPartitions.append("SELECT SUBPARTITION_NAME FROM USER_TAB_SUBPARTITIONS WHERE TABLE_NAME=? and PARTITION_NAME=?");
+					queryPartitions.append("SELECT SUBPARTITION_NAME FROM USER_TAB_SUBPARTITIONS WHERE TABLE_NAME=? and PARTITION_NAME=?   order by PARTITION_NAME");
 				String t = queryPartitions.toString();
 				String tab = this.tablename.toUpperCase();
 				List<String> subparts = null;
@@ -1010,13 +1053,96 @@ public class HDFSUploadData {
 		StringBuilder queryPartitions = new StringBuilder();
 		if(!SimpleStringUtil.isEmpty(schema))
 		{
-			queryPartitions.append("SELECT PARTITION_NAME FROM ALL_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') and table_owner='").append(this.schema).append("'");
+			queryPartitions.append("SELECT PARTITION_NAME FROM ALL_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') and table_owner='").append(this.schema).append("'  order by PARTITION_NAME");
 		}
 		else
-			queryPartitions.append("SELECT PARTITION_NAME FROM USER_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("')");
+			queryPartitions.append("SELECT PARTITION_NAME FROM USER_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') order by PARTITION_NAME");
 		
 		partitions = SQLExecutor.queryListWithDBName(String.class, this.dbname,queryPartitions.toString());
 		return handlePartitions( partitions);
+	}
+	
+	private SplitTasks buildpartitionsegement(PartitionInfo partitionInfo,int partposition) throws Exception
+	{
+		long startid =-9999;
+		long endid = -9999;
+		TaskInfo[] segments = new TaskInfo[this.datablocks];
+		long segement;
+		String plimitsql = null;
+		StringBuilder limitsql = new StringBuilder();
+		if (this.limitstatement == null
+				|| this.limitstatement.equals("")) {
+
+			String tableName = null;
+			if (this.schema == null) {
+				tableName = this.tablename;
+			} else
+				tableName = this.schema + "." + this.tablename;
+			limitsql.append("select min(").append(this.pkName)
+					.append(") as startid,max(").append(this.pkName)
+					.append(") as endid from ").append(tableName).append(partitionInfo.evalsqlpart());
+			plimitsql = limitsql.toString();
+		}
+		else
+		{
+			plimitsql = partitionInfo.evalsqlpart(limitstatement);
+		}
+
+		log.info("Admin Data Node evaluate data scope for job["
+				+ this.jobname + "] use pk[" + this.pkName
+				+ "] partitions:" + plimitsql + " on datasource "
+				+ dbname);
+		PreparedDBUtil db = new PreparedDBUtil();
+		db.preparedSelect(this.dbname, plimitsql);
+		db.executePrepared();
+		if (db.size() > 0) {
+
+			startid = db.getLong(0, "startid");
+			endid = db.getLong(0, "endid");
+			
+			
+		}
+		
+		String filebasename = partitionInfo.isIssubpartition()?partitionInfo.getSubpartition():partitionInfo.getPartition();
+			SplitTasks splitTasks = new SplitTasks();
+			splitTasks.startid= startid;
+			splitTasks.endid = endid;
+			log.info("PK[" + this.pkName + "] partition job["
+					+ this.jobname + "]  base infomation:start data id="
+					+ startid + ",endid=" + endid + ",datablocks="
+					+ datablocks);
+			long datas = endid - startid + 1;
+
+			// segments[this.workservers-1] = segments[this.workservers-1] +
+			// div;
+
+			// 构建所有的处理任务
+
+			if (datas > datablocks) {
+				segement = datas / this.datablocks;
+
+				long div = datas % this.datablocks;
+				
+				spiltTask_(segments, startid, endid, this.datablocks,
+						segement, div, false, filebasename, null,partposition);
+				splitTasks.nextpartpositionoffset = partposition+this.datablocks;
+			} else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+			{
+				TaskInfo task = new TaskInfo();
+				task.startoffset = startid;
+				task.endoffset = endid;
+				task.pagesize = datas;
+				task.filename = filebasename + "_0";
+				task.taskNo = partposition+"";
+				segement = datas;
+				segments = new TaskInfo[1];
+				segments[0] = task;
+				splitTasks.nextpartpositionoffset = partposition+1;
+			}
+			splitTasks.segments = segments;
+			splitTasks.segement = segement;
+			return splitTasks;
+		
 	}
 	/**
 	 * 计算和分解任务
@@ -1030,54 +1156,72 @@ public class HDFSUploadData {
 		if(this.usepartition)//分区操作
 		{
 			List<PartitionInfo> partitions = null;
-			if(SimpleStringUtil.isEmpty(this.partitions))//没有指定执行的分区
+			TransactionManager tm = new TransactionManager();
+			try
 			{
-//				StringBuilder queryPartitions = new StringBuilder();
-//				if(!SimpleStringUtil.isEmpty(schema))
-//				{
-//					queryPartitions.append("SELECT PARTITION_NAME FROM ALL_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') and table_owner='").append(this.schema).append("'");
-//				}
-//				else
-//					queryPartitions.append("SELECT PARTITION_NAME FROM USER_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("')");
-//				
-//				partitions = SQLExecutor.queryListWithDBName(String.class, this.dbname,queryPartitions.toString());
-				partitions = queryPartitions();
-				if(partitions != null && partitions.size() > 0)
+				tm.begin(TransactionType.RW_TRANSACTION);
+				if(SimpleStringUtil.isEmpty(this.partitions))//没有指定执行的分区
 				{
-					if(!SimpleStringUtil.isEmpty(excludepartitions))//如果指定了不需要执行的分区，则过滤排除的分区，这个和excludeblocks功能类似，但是用于第一次执行作业时使用，excludeblocks不能用于第一次作业
+	
+					partitions = queryPartitions();
+					if(partitions != null && partitions.size() > 0)
 					{
-						String[] epts = this.excludepartitions.split(",");						
-						List<PartitionInfo> temppts = new ArrayList<PartitionInfo>();
-						for(int i = 0; i < partitions.size(); i ++)
+						if(!SimpleStringUtil.isEmpty(excludepartitions))//如果指定了不需要执行的分区，则过滤排除的分区，这个和excludeblocks功能类似，但是用于第一次执行作业时使用，excludeblocks不能用于第一次作业
 						{
-							PartitionInfo part = partitions.get(i);
-							boolean exclude = false;
-							for(String ept:epts )
+							String[] epts = this.excludepartitions.split(",");						
+							List<PartitionInfo> temppts = new ArrayList<PartitionInfo>();
+							for(int i = 0; i < partitions.size(); i ++)
 							{
-								if(ept.startsWith("sub:"))
-									ept = ept.substring("sub:".length());
-								String pt = part.isIssubpartition()?part.getSubpartition():part.getPartition();
-								if(pt.equalsIgnoreCase(ept))
+								PartitionInfo part = partitions.get(i);
+								boolean exclude = false;
+								for(String ept:epts )
 								{
-									exclude = true;
-									break;
+									if(ept.startsWith("sub:"))
+										ept = ept.substring("sub:".length());
+									String pt = part.isIssubpartition()?part.getSubpartition():part.getPartition();
+									if(pt.equalsIgnoreCase(ept))
+									{
+										exclude = true;
+										break;
+									}
+								}
+								if(!exclude)
+								{
+									temppts.add(part);
 								}
 							}
-							if(!exclude)
-							{
-								temppts.add(part);
-							}
+							partitions = temppts;
 						}
-						partitions = temppts;
+						
+						
+						
+	
 					}
+				}
+				else //指定了执行的分区，有时候有新的分区，需要独立执行，就可以使用这个办法
+				{
 					
-					
+					String[] pts = this.partitions.split(",");
+					partitions = handlePartitions(Arrays.asList(pts));
+	
+				}
+				tm.commit();
+			}
+			finally
+			{
+				tm.releasenolog();
+			}
+			
+			if(partitions != null && partitions.size() > 0)
+			{
+				if(this.datablocks <= 0)
+				{
 					segments = new TaskInfo[partitions.size()];
 					for(int i = 0; i < partitions.size(); i ++)
 					{
 						PartitionInfo partition = partitions.get(i);
 						TaskInfo taskInfo = new TaskInfo();
-						taskInfo.partitionName = partition.getPartition();
+						taskInfo.partitionName = partition.getPartition(); 
 						taskInfo.setIssubpartition(partition.isIssubpartition());
 						taskInfo.setSubpartition(partition.getSubpartition());
 						taskInfo.taskNo = i + "";
@@ -1085,23 +1229,34 @@ public class HDFSUploadData {
 						segments[i] = taskInfo;
 					}
 				}
-			}
-			else //指定了执行的分区，有时候有新的分区，需要独立执行，就可以使用这个办法
-			{
-				
-				String[] pts = this.partitions.split(",");
-				partitions = handlePartitions(Arrays.asList(pts));
-				segments = new TaskInfo[partitions.size()];
-				for(int i = 0; i < partitions.size(); i ++)
+				else
 				{
-					PartitionInfo partition = partitions.get(i);
-					TaskInfo taskInfo = new TaskInfo();
-					taskInfo.partitionName = partition.getPartition(); 
-					taskInfo.setIssubpartition(partition.isIssubpartition());
-					taskInfo.setSubpartition(partition.getSubpartition());
-					taskInfo.taskNo = i + "";
-					taskInfo.filename = partition.isIssubpartition()?partition.getSubpartition():partition.getPartition();
-					segments[i] = taskInfo;
+					List<TaskInfo> allpartitionsegments = new ArrayList<TaskInfo>();
+					int nextpartpositionoffset = 0;
+					for(int i = 0; i < partitions.size(); i ++)
+					{
+						PartitionInfo partition = partitions.get(i);
+						SplitTasks partTasks = buildpartitionsegement(partition,nextpartpositionoffset);
+						nextpartpositionoffset = partTasks.nextpartpositionoffset;
+						if(partTasks != null && partTasks.segments != null)
+						{
+							
+							for(int j = 0; j < partTasks.segments.length; j ++)
+							{
+								TaskInfo taskInfo = partTasks.segments[j];
+								taskInfo.partitionName = partition.getPartition(); 
+								taskInfo.setIssubpartition(partition.isIssubpartition());
+								taskInfo.setSubpartition(partition.getSubpartition());
+								taskInfo.startid = partTasks.startid;
+								taskInfo.endid = partTasks.endid;
+								allpartitionsegments.add(taskInfo);
+							}
+							
+						}
+					}
+					segments = new TaskInfo[allpartitionsegments.size()];
+
+					allpartitionsegments.toArray(segments);
 				}
 			}
 			
@@ -1137,6 +1292,8 @@ public class HDFSUploadData {
 
 					startid = db.getLong(0, "startid");
 					endid = db.getLong(0, "endid");
+					
+					
 				}
 			}
 			if (this.startid != -9999 && this.endid != -9999) {
@@ -1426,8 +1583,21 @@ public class HDFSUploadData {
 				deleteParentBlockHDFS.add(taskInfo.filename);
 				spiltTask_(segments, startid, endid, subblocks, segement, div,
 						usepagine, taskInfo.filename, taskInfo.taskNo);
+				if(this.usepartition)
+				{
+					for(int i = 0; segments != null && i < segments.length; i++)
+					{
+						TaskInfo t = segments[i];
+						t.partitionName = taskInfo.getPartitionName(); 
+						t.setIssubpartition(taskInfo.isIssubpartition());
+						t.setSubpartition(taskInfo.getSubpartition());
+						t.startid = taskInfo.startid;
+						t.endid = taskInfo.endid;
+					}
+				}
 				splitTasks.segement = segement;
 				splitTasks.segments = segments;
+				
 				return splitTasks;
 			} else
 				return null;
@@ -1571,6 +1741,7 @@ public class HDFSUploadData {
 		this.tablename = context.getStringExtendAttribute(jobname, "tablename");
 		this.schema = context.getStringExtendAttribute(jobname, "schema");
 		this.pkName = context.getStringExtendAttribute(jobname, "pkname");
+		this.pkType = context.getStringExtendAttribute(jobname, "pktype");
 		this.columns = context.getStringExtendAttribute(jobname, "columns");
 		this.datablocks = context.getIntExtendAttribute(jobname, "datablocks");
 
@@ -2340,6 +2511,14 @@ public class HDFSUploadData {
 
 	public void setUsesubpartition(boolean usesubpartition) {
 		this.usesubpartition = usesubpartition;
+	}
+
+	public String getPkType() {
+		return pkType;
+	}
+
+	public void setPkType(String pkType) {
+		this.pkType = pkType;
 	}
 
 }

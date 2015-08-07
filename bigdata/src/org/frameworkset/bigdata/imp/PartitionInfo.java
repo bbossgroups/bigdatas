@@ -25,5 +25,24 @@ public class PartitionInfo implements java.io.Serializable{
 	public void setIssubpartition(boolean issubpartition) {
 		this.issubpartition = issubpartition;
 	}
+	
+	public String evalsqlpart()
+	{
+		if(!this.issubpartition)
+		{
+			return  " PARTITION  ("+partition+")";
+		}
+		else
+		{
+			return  " SUBPARTITION  ("+subpartition+")";
+		}
+	}
+	public String evalsqlpart(String statement)
+	{
+		if(!isIssubpartition())
+			 return statement.replace("#{partition}", " PARTITION  ("+getPartition()+")");
+		 else
+			 return statement.replace("#{partition}", " SUBPARTITION  ("+getSubpartition()+")");
+	}
 
 }

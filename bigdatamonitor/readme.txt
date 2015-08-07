@@ -56,3 +56,18 @@ to do list:
 	    blocks="12,2,3,10,20,16,14,15,11,6,4,21,8,1,9,19,18,13,7,5,17"   
 	   pkname="GKID"
 		datatype="text" />			
+		
+
+<property name="old_sany_qzj_result" dbname="qzj13"
+		driver="oracle.jdbc.driver.OracleDriver" dburl="jdbc:oracle:thin:@//10.16.1.13:1521/qzjiem"
+		dbuser="QZJIEM" dbpassword="qzjiem#EDC2011" validatesql="select 1 from dual"
+		usepool="false" hdfsserver="hdfs://10.0.15.40:9000" hdfsdatadir="/m2m/data05/test"
+		 
+		filebasename="old_sany_qzj_result"
+		schema="QZJIEM"  		 
+	  tablename="OLD_SANY_QZJ_RESULT"	 
+	    usepartition="true"	
+	  datablocks="10"
+	   pkname="GKID"
+		datatype="text" />			
+		

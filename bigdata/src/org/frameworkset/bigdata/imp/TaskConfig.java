@@ -22,6 +22,8 @@ public class TaskConfig implements java.io.Serializable{
 	 * 使用表的分区进行任务切割
 	 */
 	private boolean usepartition;
+	
+	private boolean partitiondataraged;
 	private String partitions;
 	private String excludepartitions;
 	private boolean usesubpartition = true;
@@ -50,6 +52,7 @@ public class TaskConfig implements java.io.Serializable{
 	String tablename;
 	String columns;
 	String pkname;
+	String pktype;
 	int datablocks;
 	String hdfsserver;
 	String hdfsdatadirpath;
@@ -549,6 +552,18 @@ public class TaskConfig implements java.io.Serializable{
 	}
 	public void setUsesubpartition(boolean usesubpartition) {
 		this.usesubpartition = usesubpartition;
+	}
+	public boolean isPartitiondataraged() {
+		return partitiondataraged;
+	}
+	public void setPartitiondataraged(boolean partitiondataraged) {
+		this.partitiondataraged = partitiondataraged;
+	}
+	public String getPktype() {
+		return pktype;
+	}
+	public void setPktype(String pktype) {
+		this.pktype = pktype;
 	}
 }
 

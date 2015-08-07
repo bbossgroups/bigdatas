@@ -74,6 +74,10 @@ public class FileSegment {
 	 {
 		 return job.config.isUsepartition();
 	 }
+	 public boolean partitiondataraged()
+	 {
+		 return job.config.isPartitiondataraged();
+	 }
 	 public boolean usepagine()
 	 {
 		 return this.job.usepagine();
