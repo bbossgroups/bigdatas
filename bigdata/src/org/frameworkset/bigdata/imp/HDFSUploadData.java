@@ -3,8 +3,10 @@ package org.frameworkset.bigdata.imp;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,7 @@ import org.jgroups.Address;
 import com.frameworkset.common.poolman.DBUtil;
 import com.frameworkset.common.poolman.PreparedDBUtil;
 import com.frameworkset.common.poolman.SQLExecutor;
+import com.frameworkset.common.poolman.sql.PoolManResultSetMetaData;
 import com.frameworkset.orm.annotation.TransactionType;
 import com.frameworkset.orm.transaction.TransactionManager;
 import com.frameworkset.util.SimpleStringUtil;
@@ -1097,10 +1100,57 @@ public class HDFSUploadData {
 		db.executePrepared();
 		if (db.size() > 0) {
 
-			startid = db.getLong(0, "startid");
-			endid = db.getLong(0, "endid");
+			PoolManResultSetMetaData meta = (PoolManResultSetMetaData)db.getMeta();
+			int starttype = meta.getColumnType(1);
+			
+		    if(starttype == java.sql.Types.TIMESTAMP  )
+		    {
+		    	Timestamp startid_ = db.getTimestamp(0, "startid");
+		    	Timestamp endid_ = db.getTimestamp(0, "endid");
+		    	if(startid_ == null)
+		    	{
+		    		log.info("PK[" + this.pkName + "] partition job["
+							+ this.jobname + "]  base infomation:start data id="
+							+ startid_ + ",endid=" + endid_ + ",datablocks="
+							+ datablocks + ",没有数据需要上传，任务结束.");
+					return null;
+		    	}
+		    	this.pkType="timestamp";
+		    	startid = startid_.getTime();
+		    	endid = endid_.getTime();
+		    }
+		    else if(starttype == java.sql.Types.DATE)
+		    {
+		    	 Date startid_ = db.getDate(0, "startid");
+		    	Date endid_ = db.getDate(0, "endid");
+		    	if(startid_ == null)
+		    	{
+		    		log.info("PK[" + this.pkName + "] partition job["
+							+ this.jobname + "]  base infomation:start data id="
+							+ startid_ + ",endid=" + endid_ + ",datablocks="
+							+ datablocks + ",没有数据需要上传，任务结束.");
+					return null;
+		    	}
+		    	this.pkType="date";
+		    	startid = startid_.getTime();
+		    	endid = endid_.getTime();
+		    }
+		    else
+		    {
+		    	startid = db.getLong(0, "startid");
+		    	endid = db.getLong(0, "endid");
+		    }
 			
 			
+			
+		}
+		else
+		{
+			log.info("PK[" + this.pkName + "] partition job["
+					+ this.jobname + "]  base infomation:start data id="
+					+ startid + ",endid=" + endid + ",datablocks="
+					+ datablocks + ",没有数据需要上传，任务结束.");
+			return null;
 		}
 		
 		String filebasename = partitionInfo.isIssubpartition()?partitionInfo.getSubpartition():partitionInfo.getPartition();
@@ -1126,7 +1176,8 @@ public class HDFSUploadData {
 				spiltTask_(segments, startid, endid, this.datablocks,
 						segement, div, false, filebasename, null,partposition);
 				splitTasks.nextpartpositionoffset = partposition+this.datablocks;
-			} else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+			} 
+			else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
 			{
 				TaskInfo task = new TaskInfo();
 				task.startoffset = startid;

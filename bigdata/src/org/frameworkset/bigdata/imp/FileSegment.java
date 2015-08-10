@@ -47,6 +47,16 @@ public class FileSegment {
 		 errormessage.append(errormsg).append("\r\n");
 		 return errormessage;
 	 }
+	 
+	 public boolean dateRange()
+	 {
+		 return this.job.config.dateRange(); 
+	 }
+	 
+	 public boolean timestampRange()
+	 {
+		 return this.job.config.timestampRange(); 
+	 }
 	 public boolean handleerrormsgs()
 	 {
 		 if( errormessage != null && errormessage.length() > 0)

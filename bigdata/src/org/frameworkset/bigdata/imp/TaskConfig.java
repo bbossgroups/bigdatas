@@ -565,5 +565,15 @@ public class TaskConfig implements java.io.Serializable{
 	public void setPktype(String pktype) {
 		this.pktype = pktype;
 	}
+	
+	 public boolean dateRange()
+	 {
+		 return getPktype() != null && getPktype().equals("date"); 
+	 }
+	 
+	 public boolean timestampRange()
+	 {
+		 return getPktype() != null && getPktype().equals("timestamp"); 
+	 }
 }
 

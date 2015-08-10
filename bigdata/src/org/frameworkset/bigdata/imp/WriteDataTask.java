@@ -399,18 +399,52 @@ public class WriteDataTask {
 			 		}
 			 		else
 			 		{
-			 			SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
+			 			if(fileSegment.dateRange())
+			 			{
+				 			SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
+				 				
+								@Override
+								public void handleRow(ResultSet row) throws Exception {
+									if(genFileHelper.isforceStop())
+										throw new ForceStopException();
+									write(  fileSegment,row);
+									if(genFileHelper.isforceStop())
+										throw new ForceStopException();
+								}
+					    		
+					    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),new java.sql.Date(fileSegment.getEndoffset()),new java.sql.Date(fileSegment.getStartoffset()));
+			 			}
+			 			else if(fileSegment.timestampRange())
+			 			{
+			 				SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
+				 				
+								@Override
+								public void handleRow(ResultSet row) throws Exception {
+									if(genFileHelper.isforceStop())
+										throw new ForceStopException();
+									write(  fileSegment,row);
+									if(genFileHelper.isforceStop())
+										throw new ForceStopException();
+								}
+					    		
+					    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),new java.sql.Timestamp(fileSegment.getEndoffset()),new java.sql.Timestamp(fileSegment.getStartoffset()));
+			 			}
+			 			else
+			 			{
+			 				SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
+				 				
+								@Override
+								public void handleRow(ResultSet row) throws Exception {
+									if(genFileHelper.isforceStop())
+										throw new ForceStopException();
+									write(  fileSegment,row);
+									if(genFileHelper.isforceStop())
+										throw new ForceStopException();
+								}
+					    		
+					    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),fileSegment.getEndoffset(),fileSegment.getStartoffset());
+			 			}
 			 				
-							@Override
-							public void handleRow(ResultSet row) throws Exception {
-								if(genFileHelper.isforceStop())
-									throw new ForceStopException();
-								write(  fileSegment,row);
-								if(genFileHelper.isforceStop())
-									throw new ForceStopException();
-							}
-				    		
-				    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),fileSegment.getEndoffset(),fileSegment.getStartoffset());
 			 		}
 			 	}
 			 	else if(!fileSegment.usepagine())//采用主键分区模式
