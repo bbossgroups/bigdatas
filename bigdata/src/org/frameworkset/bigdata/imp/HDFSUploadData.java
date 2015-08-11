@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +112,12 @@ public class HDFSUploadData {
 	private String pkType;
 	private String columns;
 	private String filebasename;
-	// 切分的数据块
+	/**
+	 *  切分的数据块数，
+	 *  如果分块字段类型是数字类型，按datablocks来将数据分成对应的块数来抽取，每块对应一个作业任务
+	 *  如果对应的分块字段是日期类型，则对应每块数据的对应的天数，这些天数之内的数据作为一个任务块来处理对应为天数
+	 *  
+	 */
 	private int datablocks;
 	private String dbname;
 	private int workservers;
@@ -153,6 +160,11 @@ public class HDFSUploadData {
 	 * 用来存放块的子块
 	 */
 	Map<String, List<Integer>> excludeblocksplits = null;
+	/**
+	 * 将任务切分为子块数
+	 * 如果对应的分区字段类型为数字类型，则将一级块切分为subblocks对应的二级块
+	 * 如果对应的分区字段类型为日期类型，则将原来给定天数的数据再切分为对应的subblocks时间段内的数据作为任务块的数据，对应为天数
+	 */
 	int subblocks = -1;
 	private Map<String, TaskConfig> tasks;
 	
@@ -782,6 +794,73 @@ public class HDFSUploadData {
 			}
 		}
 	}
+	
+	/**
+	 * segments , startid, subblocks,segement, div, usepagine
+	 * 
+	 * @param segments
+	 * @param startid
+	 * @param datablocks
+	 * @param segement
+	 * @param div
+	 * @param usepagine
+	 */
+	private void spiltDateTask_(List<TaskInfo> segments, java.util.Date start, java.util.Date end,
+			int datablocks, 
+			String filebasename, String parentTaskNo,int partpositionoffset) {
+		java.util.Date startoffset = start, endoffset = null;
+		int i = 0;
+		while(true)
+		{
+			endoffset = Imp.addDays(startoffset, datablocks-1, pkType);
+			TaskInfo task = new TaskInfo();
+			task.startid = start.getTime();
+			task.endid = end.getTime();
+			task.startoffset = startoffset.getTime();
+			boolean reachend = Imp.reachend(endoffset,end) ;
+			if(reachend)
+			{
+				endoffset = end;
+				
+			}
+			startoffset = Imp.addDays(endoffset, 1, pkType);
+			task.endoffset = endoffset.getTime();
+			task.pagesize = datablocks;
+			task.filename = filebasename + "_" + i;
+			int reali = partpositionoffset != -1?partpositionoffset+i:i;
+			task.taskNo = parentTaskNo == null ? "" + reali: parentTaskNo
+					+ "." + i;
+			segments.add( task);
+			
+			if(reachend)
+				break;
+			i ++;
+		}
+//		for (int i = 0; i < datablocks; i++) {
+//			TaskInfo task = new TaskInfo();
+//			task.startid = start.getTime();
+//			task.endid = end.getTime();
+//			if (i < div) {
+//				task.startoffset = startid + i * segement + i;
+//				task.endoffset = task.startoffset + segement - 1 + 1;
+//				task.pagesize = task.endoffset - task.startoffset + 1;
+//
+//			} else {
+//				task.startoffset = startid + i * segement + div;
+//				if (i == segments.length - 1)
+//					task.endoffset = endid;
+//				else
+//					task.endoffset = task.startoffset + segement - 1;
+//				task.pagesize = task.endoffset - task.startoffset + 1;
+//			}
+//			task.filename = filebasename + "_" + i;
+//			int reali = partpositionoffset != -1?partpositionoffset+i:i;
+//			task.taskNo = parentTaskNo == null ? "" + reali: parentTaskNo
+//					+ "." + i;
+//			segments[i] = task;
+//		}
+//		
+	}
 
 	static class LinkTasks {
 		int block;
@@ -1069,8 +1148,8 @@ public class HDFSUploadData {
 	{
 		long startid =-9999;
 		long endid = -9999;
-		TaskInfo[] segments = new TaskInfo[this.datablocks];
-		long segement;
+		TaskInfo[] segments = null;
+		long segement = 0;
 		String plimitsql = null;
 		StringBuilder limitsql = new StringBuilder();
 		if (this.limitstatement == null
@@ -1137,6 +1216,7 @@ public class HDFSUploadData {
 		    }
 		    else
 		    {
+		    	this.pkType= "number";
 		    	startid = db.getLong(0, "startid");
 		    	endid = db.getLong(0, "endid");
 		    }
@@ -1161,40 +1241,229 @@ public class HDFSUploadData {
 					+ this.jobname + "]  base infomation:start data id="
 					+ startid + ",endid=" + endid + ",datablocks="
 					+ datablocks);
-			long datas = endid - startid + 1;
-
-			// segments[this.workservers-1] = segments[this.workservers-1] +
-			// div;
-
-			// 构建所有的处理任务
-
-			if (datas > datablocks) {
-				segement = datas / this.datablocks;
-
-				long div = datas % this.datablocks;
-				
-				spiltTask_(segments, startid, endid, this.datablocks,
-						segement, div, false, filebasename, null,partposition);
-				splitTasks.nextpartpositionoffset = partposition+this.datablocks;
-			} 
-			else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+			if(!Imp.numberRange(pkType))//按天数切分
 			{
-				TaskInfo task = new TaskInfo();
-				task.startoffset = startid;
-				task.endoffset = endid;
-				task.pagesize = datas;
-				task.filename = filebasename + "_0";
-				task.taskNo = partposition+"";
-				segement = datas;
-				segments = new TaskInfo[1];
-				segments[0] = task;
-				splitTasks.nextpartpositionoffset = partposition+1;
+				java.util.Date startdate = Imp.getDateTime(pkType, startid);
+				java.util.Date enddate = Imp.getDateTime(pkType, endid);
+				
+//				java.util.Calendar c = java.util.Calendar.getInstance();
+//				c.setTime(startdate);
+//				c.add(Calendar.DAY_OF_MONTH, datablocks);
+				java.util.Date tempdate = Imp.addDays(startdate, datablocks-1, pkType);
+	
+				if (!Imp.reachend(tempdate,enddate)) {
+					segement = this.datablocks;
+					List<TaskInfo> tempsegments = new ArrayList<TaskInfo>();
+					spiltDateTask_(tempsegments, startdate, enddate, this.datablocks, filebasename, null,partposition);
+					segments = new TaskInfo[tempsegments.size()];
+					tempsegments.toArray(segments);
+					splitTasks.nextpartpositionoffset = partposition+this.datablocks;
+				} 
+				else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+				{
+					TaskInfo task = new TaskInfo();
+					task.startoffset = startid;
+					task.endoffset = endid;
+					task.pagesize = datablocks;
+					task.filename = filebasename + "_0";
+					task.taskNo = partposition+"";
+					segement = datablocks;
+					segments = new TaskInfo[1];
+					segments[0] = task;
+					splitTasks.nextpartpositionoffset = partposition+1;
+				}
+			}
+			else//按数据范围切分
+			{
+				
+				long datas = endid - startid + 1;
+				
+				// segments[this.workservers-1] = segments[this.workservers-1] +
+				// div;
+	
+				// 构建所有的处理任务
+				
+	
+				if (datas > datablocks) {
+					segments = new TaskInfo[this.datablocks];
+					segement = datas / this.datablocks;
+	
+					long div = datas % this.datablocks;
+					
+					spiltTask_(segments, startid, endid, this.datablocks,
+							segement, div, false, filebasename, null,partposition);
+					splitTasks.nextpartpositionoffset = partposition+this.datablocks;
+				} 
+				else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+				{
+					TaskInfo task = new TaskInfo();
+					task.startoffset = startid;
+					task.endoffset = endid;
+					task.pagesize = datas;
+					task.filename = filebasename + "_0";
+					task.taskNo = partposition+"";
+					segement = datas;
+					segments = new TaskInfo[1];
+					segments[0] = task;
+					splitTasks.nextpartpositionoffset = partposition+1;
+				}
 			}
 			splitTasks.segments = segments;
 			splitTasks.segement = segement;
 			return splitTasks;
 		
 	}
+	private SplitTasks buildatarangeTasks() throws Exception
+	{
+		SplitTasks splitTasks = new SplitTasks();
+		long segement = 0;
+		TaskInfo[] segments = null;
+		if (this.startid == -9999 || this.endid == -9999) {
+			StringBuilder limitsql = new StringBuilder();
+			if (this.limitstatement == null
+					|| this.limitstatement.equals("")) {
+
+				String tableName = null;
+				if (this.schema == null) {
+					tableName = this.tablename;
+				} else
+					tableName = this.schema + "." + this.tablename;
+				limitsql.append("select min(").append(this.pkName)
+						.append(") as startid,max(").append(this.pkName)
+						.append(") as endid from ").append(tableName);
+				this.limitstatement = limitsql.toString();
+			}
+
+			log.info("Admin Data Node evaluate data scope for job["
+					+ this.jobname + "] use pk[" + this.pkName
+					+ "] partitions:" + limitstatement + " on datasource "
+					+ dbname);
+			PreparedDBUtil db = new PreparedDBUtil();
+			db.preparedSelect(this.dbname, limitstatement);
+			db.executePrepared();
+			if (db.size() > 0) {
+
+				PoolManResultSetMetaData meta = (PoolManResultSetMetaData)db.getMeta();
+				int starttype = meta.getColumnType(1);
+				
+			    if(starttype == java.sql.Types.TIMESTAMP  )
+			    {
+			    	Timestamp startid_ = db.getTimestamp(0, "startid");
+			    	Timestamp endid_ = db.getTimestamp(0, "endid");
+			    	if(startid_ == null)
+			    	{
+			    		log.info("PK[" + this.pkName + "] partition job["
+								+ this.jobname + "]  base infomation:start data id="
+								+ startid_ + ",endid=" + endid_ + ",datablocks="
+								+ datablocks + ",没有数据需要上传，任务结束.");
+						return null;
+			    	}
+			    	this.pkType="timestamp";
+			    	startid = startid_.getTime();
+			    	endid = endid_.getTime();
+			    }
+			    else if(starttype == java.sql.Types.DATE)
+			    {
+			    	 Date startid_ = db.getDate(0, "startid");
+			    	Date endid_ = db.getDate(0, "endid");
+			    	if(startid_ == null)
+			    	{
+			    		log.info("PK[" + this.pkName + "] partition job["
+								+ this.jobname + "]  base infomation:start data id="
+								+ startid_ + ",endid=" + endid_ + ",datablocks="
+								+ datablocks + ",没有数据需要上传，任务结束.");
+						return null;
+			    	}
+			    	this.pkType="date";
+			    	startid = startid_.getTime();
+			    	endid = endid_.getTime();
+			    }
+			    else
+			    {
+			    	startid = db.getLong(0, "startid");
+			    	endid = db.getLong(0, "endid");
+			    }
+				
+				
+			}
+		}
+		if (this.startid != -9999 && this.endid != -9999) {
+			log.info("PK[" + this.pkName + "] partition job["
+					+ this.jobname + "]  base infomation:start data id="
+					+ startid + ",endid=" + endid + ",datablocks="
+					+ datablocks);
+			if(!Imp.numberRange(pkType))//按天数切分
+			{
+			
+				java.util.Date startdate = Imp.getDateTime(pkType, startid);
+				java.util.Date enddate = Imp.getDateTime(pkType, endid);
+				
+//				java.util.Calendar c = java.util.Calendar.getInstance();
+//				c.setTime(startdate);
+//				c.add(Calendar.DAY_OF_MONTH, datablocks);
+				java.util.Date tempdate = Imp.addDays(startdate, datablocks-1, pkType);
+	
+				if (!Imp.reachend(tempdate,enddate)) {
+					segement = this.datablocks;
+					List<TaskInfo> tempsegments = new ArrayList<TaskInfo>();
+					spiltDateTask_(tempsegments, startdate, enddate, this.datablocks,
+							 filebasename, null,-1);
+					segments = new TaskInfo[tempsegments.size()];
+					tempsegments.toArray(segments);
+					 
+				} 
+				else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+				{
+					TaskInfo task = new TaskInfo();
+					task.startoffset = startid;
+					task.endoffset = endid;
+					task.pagesize = datablocks;
+					task.filename = filebasename + "_0";
+					task.taskNo = "0";
+					segement = datablocks;
+					segments = new TaskInfo[1];
+					segments[0] = task;
+				}
+			}
+			else
+			{
+				long datas = endid - startid + 1;	
+				// segments[this.workservers-1] = segments[this.workservers-1] +
+				// div;	
+				// 构建所有的处理任务	
+				if (datas > datablocks) {
+					segement = datas / this.datablocks;
+	
+					long div = datas % this.datablocks;
+					segments = new TaskInfo[this.datablocks];
+					spiltTask_(segments, startid, endid, this.datablocks,
+							segement, div, usepagine, filebasename, null);
+				} 
+				else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+				{
+					TaskInfo task = new TaskInfo();
+					task.startoffset = startid;
+					task.endoffset = endid;
+					task.pagesize = datas;
+					task.filename = filebasename + "_0";
+					task.taskNo = "0";
+					segement = datas;
+					segments = new TaskInfo[1];
+					segments[0] = task;
+				}
+			}
+			splitTasks.segement = segement;
+			splitTasks.segments = segments;
+			return splitTasks;
+		} else {
+			log.info("PK[" + this.pkName + "] partition job["
+					+ this.jobname + "]  base infomation:start data id="
+					+ startid + ",endid=" + endid + ",datablocks="
+					+ datablocks + ",没有数据需要上传，任务结束.");
+			return null;
+		}
+	}
+	
 	/**
 	 * 计算和分解任务
 	 * @return
@@ -1288,10 +1557,10 @@ public class HDFSUploadData {
 					{
 						PartitionInfo partition = partitions.get(i);
 						SplitTasks partTasks = buildpartitionsegement(partition,nextpartpositionoffset);
-						nextpartpositionoffset = partTasks.nextpartpositionoffset;
+						
 						if(partTasks != null && partTasks.segments != null)
 						{
-							
+							nextpartpositionoffset = partTasks.nextpartpositionoffset;
 							for(int j = 0; j < partTasks.segments.length; j ++)
 							{
 								TaskInfo taskInfo = partTasks.segments[j];
@@ -1305,9 +1574,19 @@ public class HDFSUploadData {
 							
 						}
 					}
-					segments = new TaskInfo[allpartitionsegments.size()];
-
-					allpartitionsegments.toArray(segments);
+					if(allpartitionsegments.size() > 0)
+					{
+						segments = new TaskInfo[allpartitionsegments.size()];
+	
+						allpartitionsegments.toArray(segments);
+					}
+					else 
+					{
+							log.info("PK[" + this.pkName + "] partition job["
+									+ this.jobname + "]  base infomation:datablocks="
+									+ datablocks + ",没有数据需要上传，任务结束.");
+							return null;
+						}
 				}
 			}
 			
@@ -1315,76 +1594,122 @@ public class HDFSUploadData {
 		}
 		else if (!this.usepagine) // 按主键范围切割数据，可能导致数据不均匀
 		{
-			segments = new TaskInfo[this.datablocks];
-			if (this.startid == -9999 || this.endid == -9999) {
-				StringBuilder limitsql = new StringBuilder();
-				if (this.limitstatement == null
-						|| this.limitstatement.equals("")) {
-
-					String tableName = null;
-					if (this.schema == null) {
-						tableName = this.tablename;
-					} else
-						tableName = this.schema + "." + this.tablename;
-					limitsql.append("select min(").append(this.pkName)
-							.append(") as startid,max(").append(this.pkName)
-							.append(") as endid from ").append(tableName);
-					this.limitstatement = limitsql.toString();
-				}
-
-				log.info("Admin Data Node evaluate data scope for job["
-						+ this.jobname + "] use pk[" + this.pkName
-						+ "] partitions:" + limitstatement + " on datasource "
-						+ dbname);
-				PreparedDBUtil db = new PreparedDBUtil();
-				db.preparedSelect(this.dbname, limitstatement);
-				db.executePrepared();
-				if (db.size() > 0) {
-
-					startid = db.getLong(0, "startid");
-					endid = db.getLong(0, "endid");
-					
-					
-				}
-			}
-			if (this.startid != -9999 && this.endid != -9999) {
-				log.info("PK[" + this.pkName + "] partition job["
-						+ this.jobname + "]  base infomation:start data id="
-						+ startid + ",endid=" + endid + ",datablocks="
-						+ datablocks);
-				long datas = endid - startid + 1;
-
-				// segments[this.workservers-1] = segments[this.workservers-1] +
-				// div;
-
-				// 构建所有的处理任务
-
-				if (datas > datablocks) {
-					segement = datas / this.datablocks;
-
-					long div = datas % this.datablocks;
-
-					spiltTask_(segments, startid, endid, this.datablocks,
-							segement, div, usepagine, filebasename, null);
-				} else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
-				{
-					TaskInfo task = new TaskInfo();
-					task.startoffset = startid;
-					task.endoffset = endid;
-					task.pagesize = datas;
-					task.filename = filebasename + "_0";
-					task.taskNo = "0";
-					segement = datas;
-					segments = new TaskInfo[1];
-					segments[0] = task;
-				}
-			} else {
-				log.info("PK[" + this.pkName + "] partition job["
-						+ this.jobname + "]  base infomation:start data id="
-						+ startid + ",endid=" + endid + ",datablocks="
-						+ datablocks + ",没有数据需要上传，任务结束.");
+			SplitTasks partTasks = this.buildatarangeTasks();
+			if(partTasks == null || partTasks.segments == null)
+			{
 				return null;
 			}
+			segments = partTasks.segments;
+			segement = partTasks.segement;
+//			segments = new TaskInfo[this.datablocks];
+//			if (this.startid == -9999 || this.endid == -9999) {
+//				StringBuilder limitsql = new StringBuilder();
+//				if (this.limitstatement == null
+//						|| this.limitstatement.equals("")) {
+//
+//					String tableName = null;
+//					if (this.schema == null) {
+//						tableName = this.tablename;
+//					} else
+//						tableName = this.schema + "." + this.tablename;
+//					limitsql.append("select min(").append(this.pkName)
+//							.append(") as startid,max(").append(this.pkName)
+//							.append(") as endid from ").append(tableName);
+//					this.limitstatement = limitsql.toString();
+//				}
+//
+//				log.info("Admin Data Node evaluate data scope for job["
+//						+ this.jobname + "] use pk[" + this.pkName
+//						+ "] partitions:" + limitstatement + " on datasource "
+//						+ dbname);
+//				PreparedDBUtil db = new PreparedDBUtil();
+//				db.preparedSelect(this.dbname, limitstatement);
+//				db.executePrepared();
+//				if (db.size() > 0) {
+//
+//					PoolManResultSetMetaData meta = (PoolManResultSetMetaData)db.getMeta();
+//					int starttype = meta.getColumnType(1);
+//					
+//				    if(starttype == java.sql.Types.TIMESTAMP  )
+//				    {
+//				    	Timestamp startid_ = db.getTimestamp(0, "startid");
+//				    	Timestamp endid_ = db.getTimestamp(0, "endid");
+//				    	if(startid_ == null)
+//				    	{
+//				    		log.info("PK[" + this.pkName + "] partition job["
+//									+ this.jobname + "]  base infomation:start data id="
+//									+ startid_ + ",endid=" + endid_ + ",datablocks="
+//									+ datablocks + ",没有数据需要上传，任务结束.");
+//							return null;
+//				    	}
+//				    	this.pkType="timestamp";
+//				    	startid = startid_.getTime();
+//				    	endid = endid_.getTime();
+//				    }
+//				    else if(starttype == java.sql.Types.DATE)
+//				    {
+//				    	 Date startid_ = db.getDate(0, "startid");
+//				    	Date endid_ = db.getDate(0, "endid");
+//				    	if(startid_ == null)
+//				    	{
+//				    		log.info("PK[" + this.pkName + "] partition job["
+//									+ this.jobname + "]  base infomation:start data id="
+//									+ startid_ + ",endid=" + endid_ + ",datablocks="
+//									+ datablocks + ",没有数据需要上传，任务结束.");
+//							return null;
+//				    	}
+//				    	this.pkType="date";
+//				    	startid = startid_.getTime();
+//				    	endid = endid_.getTime();
+//				    }
+//				    else
+//				    {
+//				    	startid = db.getLong(0, "startid");
+//				    	endid = db.getLong(0, "endid");
+//				    }
+//					
+//					
+//				}
+//			}
+//			if (this.startid != -9999 && this.endid != -9999) {
+//				log.info("PK[" + this.pkName + "] partition job["
+//						+ this.jobname + "]  base infomation:start data id="
+//						+ startid + ",endid=" + endid + ",datablocks="
+//						+ datablocks);
+//				
+//				long datas = endid - startid + 1;
+//
+//				// segments[this.workservers-1] = segments[this.workservers-1] +
+//				// div;
+//
+//				// 构建所有的处理任务
+//
+//				if (datas > datablocks) {
+//					segement = datas / this.datablocks;
+//
+//					long div = datas % this.datablocks;
+//
+//					spiltTask_(segments, startid, endid, this.datablocks,
+//							segement, div, usepagine, filebasename, null);
+//				} else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+//				{
+//					TaskInfo task = new TaskInfo();
+//					task.startoffset = startid;
+//					task.endoffset = endid;
+//					task.pagesize = datas;
+//					task.filename = filebasename + "_0";
+//					task.taskNo = "0";
+//					segement = datas;
+//					segments = new TaskInfo[1];
+//					segments[0] = task;
+//				}
+//			} else {
+//				log.info("PK[" + this.pkName + "] partition job["
+//						+ this.jobname + "]  base infomation:start data id="
+//						+ startid + ",endid=" + endid + ",datablocks="
+//						+ datablocks + ",没有数据需要上传，任务结束.");
+//				return null;
+//			}
 		} 
 		else // 按分页方式切割任务
 		{
@@ -1443,168 +1768,7 @@ public class HDFSUploadData {
 				segments[0] = task;
 			}
 		}
-		//start
-//		List<LinkTasks> temp = null;
-//		List<TaskInfo> retTasks = null;
-//		if (this.blocks != null && this.blocks.length > 0)// 如果指定了任务块，则只执行指定的任务块
-//		{
-//			temp = new ArrayList<LinkTasks>(blocks.length);
-//			int blockslen = this.blocks.length;
-//			for (int i = 0; i < blockslen; i++) {
-//				if (blocks[i] < segments.length) {
-//					LinkTasks linkTasks = new LinkTasks();
-//					linkTasks.block = blocks[i];
-//					linkTasks.taskInfo = segments[blocks[i]];
-//					temp.add(linkTasks);
-//
-//				}
-//			}
-//			if (temp.size() > 0) {
-//				if (this.subblocks > 0)// 如果需要对子任务进行切分，则需要进一步切分子任务，并且需要清除原来的大块数据对应的hdfs文件
-//				{
-//					// 进一步切分子任务
-//					List<TaskInfo> subchunks = new ArrayList<TaskInfo>();
-//					for (int i = 0; i < temp.size(); i++) {
-//						LinkTasks linkTasks = temp.get(i);
-//						TaskInfo t = linkTasks.taskInfo;
-//						SplitTasks subsplitTasks = buildJobSubChunks(t);
-//						if (subsplitTasks == null) {
-//							subchunks.add(t);
-//						} else {
-//							segement = subsplitTasks.segement;
-//							List<Integer> filters = this.blocksplits
-//									.get(linkTasks.block + "");// 指定了要过滤的数据块
-//							if (filters != null && filters.size() > 0) {
-//								List<TaskInfo> subsgs = new ArrayList<TaskInfo>(
-//										filters.size());
-//								TaskInfo[] sgs = subsplitTasks.segments;
-//								for (int j = 0; j < filters.size(); j++) {
-//									int pos = filters.get(j).intValue();
-//									if (pos < sgs.length) {
-//										subsgs.add(sgs[pos]);
-//									}
-//								}
-//								subchunks.addAll(subsgs);
-//							} else {
-//								subchunks.addAll(Arrays
-//										.asList(subsplitTasks.segments));
-//							}
-//
-//						}
-//					}
-//					retTasks = subchunks;
-//
-//				} else {
-//					retTasks = new ArrayList<TaskInfo>();
-//					for (int i = 0; i < temp.size(); i++) {
-//						LinkTasks linkTasks = temp.get(i);
-//						retTasks.add(linkTasks.taskInfo);
-//					}
-//				}
-//
-//				segments = new TaskInfo[retTasks.size()];
-//
-//				retTasks.toArray(segments);
-//
-//			}
-//		} else if (this.excludeblocks != null && this.excludeblocks.length > 0)// 排除要清除的数据块
-//		{
-//			temp = new ArrayList<LinkTasks>();
-//			int blockslen = this.excludeblocks.length;
-//			for (int i = 0; i < blockslen; i++) {// 计算有效的排除块
-//				if (excludeblocks[i] < segments.length) {
-//					LinkTasks linkTasks = new LinkTasks();
-//					linkTasks.block = excludeblocks[i];
-//					linkTasks.taskInfo = segments[linkTasks.block];
-//					temp.add(linkTasks);
-//
-//				}
-//			}
-//			if (temp.size() > 0) {
-//				if (this.subblocks > 0)// 如果需要对子任务进行切分，则需要进一步切分子任务，并且需要清除原来的大块数据对应的hdfs文件
-//				{
-//					// 进一步切分子任务
-//					List<TaskInfo> subchunks = new ArrayList<TaskInfo>();
-//					for (int j = 0; j < segments.length; j++) {
-//						SplitTasks subsplitTasks = buildJobSubChunks(segments[j]);
-//						if (subsplitTasks != null)
-//							segement = subsplitTasks.segement;
-//						boolean isexclude = false;
-//						for (int i = 0; i < temp.size(); i++) {
-//							LinkTasks linkTasks = temp.get(i);
-//							if (linkTasks.block == j)// 不是排除的块，需要重新抽取
-//							{
-//								isexclude = true;
-//								break;
-//							}
-//						}
-//						if (!isexclude) {
-//							if (subsplitTasks == null) {
-//								subchunks.add(segments[j]);
-//							} else {
-//								subchunks.addAll(Arrays
-//										.asList(subsplitTasks.segments));
-//							}
-//						} else {
-//							if (subsplitTasks == null)// 没有子块，整块排除
-//							{
-//
-//							} else // 有子块，判断要排除的子块
-//							{
-//								List<Integer> excludes = this.excludeblocksplits
-//										.get(j + "");
-//								if (excludes == null)// 没有自定子块，整块的所有子块都排除
-//								{
-//
-//								} else // 识别子块中要排除的块，将不需要排除的块添加到任务列表中
-//								{
-//
-//									for (int k = 0; k < subsplitTasks.segments.length; k++) {
-//										boolean issubexclude = false;
-//										for (Integer epos : excludes) {
-//											if (k == epos.intValue()) {
-//												issubexclude = true;
-//												break;
-//											}
-//
-//										}
-//										if (!issubexclude)
-//											subchunks
-//													.add(subsplitTasks.segments[k]);
-//									}
-//
-//								}
-//
-//							}
-//						}
-//
-//					}
-//					retTasks = subchunks;
-//
-//				} else {
-//					retTasks = new ArrayList<TaskInfo>();
-//					for (int j = 0; j < segments.length; j++) {
-//						boolean isexclude = false;
-//						for (int i = 0; i < temp.size(); i++) {
-//							LinkTasks linkTasks = temp.get(i);
-//							if (linkTasks.block == j) {
-//								isexclude = true;
-//							}
-//						}
-//						if (!isexclude)
-//							retTasks.add(segments[j]);
-//					}
-//				}
-//
-//				segments = new TaskInfo[retTasks.size()];
-//
-//				retTasks.toArray(segments);
-//
-//			}
-//		}
-//		splitTasks.segement = segement;
-//		splitTasks.segments = segments;
-		//end
+
 		splitTasks = filterTasks(segments ,segement);
 		return splitTasks;
 	}
@@ -1617,43 +1781,92 @@ public class HDFSUploadData {
 	SplitTasks buildJobSubChunks(TaskInfo taskInfo) {
 
 		SplitTasks splitTasks = new SplitTasks();
-		TaskInfo[] segments = new TaskInfo[this.subblocks];
+		TaskInfo[] segments = null;
 		long segement = 0l;
 		long startid = taskInfo.startoffset;
-		long datas = taskInfo.pagesize;
-		long endid = startid + datas - 1;
+		long endid = 0;
 		if (deleteParentBlockHDFS == null)
 			deleteParentBlockHDFS = new ArrayList<String>();
 		if (!this.usepagine) {
 
-			if (datas > subblocks) {
-				segement = datas / subblocks;
-
-				long div = datas % this.subblocks;
-
-				deleteParentBlockHDFS.add(taskInfo.filename);
-				spiltTask_(segments, startid, endid, subblocks, segement, div,
-						usepagine, taskInfo.filename, taskInfo.taskNo);
-				if(this.usepartition)
-				{
-					for(int i = 0; segments != null && i < segments.length; i++)
+			if(Imp.numberRange(pkType))
+			{
+				long datas = taskInfo.pagesize;
+				endid = startid + datas - 1;
+				if (datas > subblocks) {
+					segments = new TaskInfo[this.subblocks];
+					segement = datas / subblocks;
+	
+					long div = datas % this.subblocks;
+	
+					deleteParentBlockHDFS.add(taskInfo.filename);
+					spiltTask_(segments, startid, endid, subblocks, segement, div,
+							usepagine, taskInfo.filename, taskInfo.taskNo);
+					if(this.usepartition)
 					{
-						TaskInfo t = segments[i];
-						t.partitionName = taskInfo.getPartitionName(); 
-						t.setIssubpartition(taskInfo.isIssubpartition());
-						t.setSubpartition(taskInfo.getSubpartition());
-						t.startid = taskInfo.startid;
-						t.endid = taskInfo.endid;
+						for(int i = 0; segments != null && i < segments.length; i++)
+						{
+							TaskInfo t = segments[i];
+							t.partitionName = taskInfo.getPartitionName(); 
+							t.setIssubpartition(taskInfo.isIssubpartition());
+							t.setSubpartition(taskInfo.getSubpartition());
+							t.startid = taskInfo.startid;
+							t.endid = taskInfo.endid;
+						}
 					}
-				}
-				splitTasks.segement = segement;
-				splitTasks.segments = segments;
+					splitTasks.segement = segement;
+					splitTasks.segments = segments;
+					
+					return splitTasks;
+				} else
+					return null;
+			}
+			else
+			{
+				endid = taskInfo.endoffset;
+				java.util.Date startdate = Imp.getDateTime(pkType, startid);
+				java.util.Date enddate = Imp.getDateTime(pkType, endid);
 				
-				return splitTasks;
-			} else
-				return null;
+//				java.util.Calendar c = java.util.Calendar.getInstance();
+//				c.setTime(startdate);
+//				c.add(Calendar.DAY_OF_MONTH, datablocks);
+				java.util.Date tempdate = Imp.addDays(startdate, subblocks-1, pkType);
+	
+				if (!Imp.reachend(tempdate,enddate)) {
+					deleteParentBlockHDFS.add(taskInfo.filename);
+					segement = this.subblocks;
+					List<TaskInfo> tempsegments = new ArrayList<TaskInfo>();
+					spiltDateTask_(tempsegments, startdate, enddate, this.subblocks,
+							 taskInfo.filename, taskInfo.taskNo,-1);
+					segments = new TaskInfo[tempsegments.size()];
+					tempsegments.toArray(segments);
+					if(this.usepartition)
+					{
+						for(int i = 0; segments != null && i < segments.length; i++)
+						{
+							TaskInfo t = segments[i];
+							t.partitionName = taskInfo.getPartitionName(); 
+							t.setIssubpartition(taskInfo.isIssubpartition());
+							t.setSubpartition(taskInfo.getSubpartition());
+							t.startid = taskInfo.startid;
+							t.endid = taskInfo.endid;
+						}
+					}
+					splitTasks.segement = segement;
+					splitTasks.segments = segments;
+					
+					return splitTasks;
+				} 
+				else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
+				{
+					return null;
+				}
+			}
 		} else {
+			long datas = taskInfo.pagesize;
+			endid = startid + datas - 1;
 			if (datas > subblocks) {
+				segments = new TaskInfo[this.subblocks];
 				segement = datas / this.subblocks;
 
 				long div = datas % this.subblocks;
@@ -1728,6 +1941,13 @@ public class HDFSUploadData {
 			int alltasks = segments.length;
 			int servertasks = alltasks / workservers;
 			int taskdiv = alltasks % workservers;
+			 
+			for (int i = 0; i < alltasks; i++) {
+				TaskInfo task = segments[i];
+				System.out.println("start="+new Timestamp(task.getStartoffset()));
+				System.out.println("End="+new Timestamp(task.getEndoffset()));
+				
+			}
 			for (int i = 0; i < workservers && i < alltasks; i++) {
 				TaskConfig config = buildTaskConfigWithID(jobstaticid);
 

@@ -3,6 +3,8 @@ package org.frameworkset.bigdata.imp;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -278,5 +280,47 @@ public class Imp {
 	{
 		return Imp.getImpStaticManager().clearJobStatic(jobname, hostName);
 	}
+	
+	 public static boolean dateRange(String pktype)
+	 {
+		 return pktype != null && pktype.equals("date"); 
+	 }
+	 
+	 public static boolean timestampRange(String pktype)
+	 {
+		 return pktype != null && pktype.equals("timestamp"); 
+	 }
+	 
+	 public static boolean numberRange(String pktype)
+	 {
+		 return pktype == null || pktype.equals("number"); 
+	 }
+	 
+	 
+	 public static Date addDays(Date startdate,int days,String pkType)
+	 {
+		 
+		   java.util.Calendar c = java.util.Calendar.getInstance();
+			c.setTime(startdate);
+			c.add(Calendar.DAY_OF_MONTH, days);
+			return  Imp.getDateTime(pkType, c.getTimeInMillis());
+	 }
+	 public static Date getDateTime(String pktype,long time)
+	 {
+		 if(dateRange(pktype))
+		 {
+			return new java.sql.Date(time) ;
+		 }
+		 else
+		 {
+			 return new java.sql.Timestamp(time) ;
+		 }
+	 }
+	 
+	 public static boolean reachend(Date endoffset,Date end)
+	 {
+		 boolean reachend = endoffset.after(end) || endoffset.compareTo(end) == 0;
+		 return reachend;
+	 }
 
 }

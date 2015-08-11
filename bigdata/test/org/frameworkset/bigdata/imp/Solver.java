@@ -1,14 +1,16 @@
 package org.frameworkset.bigdata.imp;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import com.frameworkset.common.poolman.SQLExecutor;
-import com.frameworkset.common.poolman.handle.ResultSetNullRowHandler;
 import com.frameworkset.common.poolman.util.SQLUtil;
 
 public class Solver {
@@ -83,7 +85,7 @@ public class Solver {
 				e.printStackTrace();
 			}
 	}
-	public static void main(String[] args) throws SQLException
+	public static void main(String[] args) throws SQLException, Exception
 	{
 ////		Solver s = new Solver();
 ////		s.solver(new float[][]{{1,2,},{3,4}});
@@ -141,5 +143,57 @@ public class Solver {
 //		System.out.println(oracle.sql.NUMBER.toText(dd));
 		
 		System.out.println("sub:test".substring("sub:".length()));
+		
+		
+		SQLUtil.startPool("test","oracle.jdbc.driver.OracleDriver","jdbc:oracle:thin:@//10.0.15.51:1521/orcl","testpdp1","testpdp1",
+		 "true",
+		 null,//"READ_COMMITTED",
+		"select 1 from dual",
+		 "jndi-test",   
+		 2,
+		 2,
+		 2,
+   		false,
+   		false,
+   		null        ,true,false
+   		);
+		java.text.SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") ;
+		Timestamp startdate = new Timestamp(format.parse("2011-10-01 00:00:00").getTime());  
+		format = new SimpleDateFormat("yyyy_MM_dd") ;
+		for(int i = 0; i < 27; i ++)
+		{
+			
+			String partname ="part"+ format.format(startdate);
+			System.out.println("startdate:"+startdate);
+			test(partname,startdate,i);
+			java.util.Calendar c = java.util.Calendar.getInstance();
+			c.setTime(startdate);
+			c.add(Calendar.MONTH, 1);
+			startdate = new Timestamp(c.getTimeInMillis());
+			
+		}
+	}
+	
+	static void test(String partname,Timestamp date,int count) throws SQLException
+	{
+		int start = count * 300;
+		
+		for(int i = 0; i < 300; i ++)
+		{
+			if((i % 10) == 0 && i > 0)
+			{
+				java.util.Calendar c = java.util.Calendar.getInstance();
+				c.setTime(date);
+				c.add(Calendar.DAY_OF_MONTH, 1);
+				date = new Timestamp(c.getTimeInMillis());
+				System.out.println(date);
+				SQLExecutor.insertWithDBName("test", "insert into OLD_SANY_QZJ_RESULT(GKID,VECHILENO,DT) values(?,?,?)",start + i,partname+i, date);
+			}
+			else
+			{
+				SQLExecutor.insertWithDBName("test", "insert into OLD_SANY_QZJ_RESULT(GKID,VECHILENO,DT) values(?,?,?)",start + i,partname+i, date);
+			}
+				
+		}
 	}
 }

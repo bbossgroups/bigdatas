@@ -50,12 +50,12 @@ public class FileSegment {
 	 
 	 public boolean dateRange()
 	 {
-		 return this.job.config.dateRange(); 
+		 return Imp.dateRange(this.job.config.getPktype()); 
 	 }
 	 
 	 public boolean timestampRange()
 	 {
-		 return this.job.config.timestampRange(); 
+		 return Imp.timestampRange(this.job.config.getPktype()); 
 	 }
 	 public boolean handleerrormsgs()
 	 {
