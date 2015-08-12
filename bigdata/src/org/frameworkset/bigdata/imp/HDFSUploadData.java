@@ -1285,7 +1285,7 @@ public class HDFSUploadData {
 					spiltDateTask_(tempsegments, startdate, enddate, this.datablocks, filebasename, null,partposition,false);
 					segments = new TaskInfo[tempsegments.size()];
 					tempsegments.toArray(segments);
-					splitTasks.nextpartpositionoffset = partposition+this.datablocks;
+					splitTasks.nextpartpositionoffset = partposition+segments.length;
 				} 
 				else // 数据量小于块数，那么直接按一块数据进行处理，不需要进行分块处理
 				{
