@@ -100,16 +100,84 @@ public class FileSegment {
 			return this.job.config.getPageinestatement();
 		}
 	 public String getQuerystatement() {
-		 if(!this.usepartition())
-			 return this.job.config.getQuerystatement();
+		 StringBuilder builder = new StringBuilder();
+		
+		 if(this.job.config.isOnejob() || this.job.config.isUsepagine())
+		 {
+			 builder.append(this.job.config.getQuerystatement());
+			 return builder.toString();
+		 }
+		 else if(this.usepartition())		 
+		 {
+			
+			 if(!taskInfo.isIssubpartition())
+				 builder.append(this.job.config.getQuerystatement().replace("#{partition}", " PARTITION  ("+taskInfo.getPartitionName()+")"));
+			 else
+				 builder.append(this.job.config.getQuerystatement().replace("#{partition}", " SUBPARTITION  ("+taskInfo.getSubpartition()+")"));
+			
+			 
+			 if(!this.job.config.isPartitiondataraged())
+			 {
+				 return builder.toString();
+			 }
+		 }
+		 if(Imp.numberRange(job.config.getPktype()))
+		 {		 
+				 
+			 builder.append(" where ")
+					.append(this.job.config.pkname).append("<=? and ")
+					.append(this.job.config.pkname).append(">=?");				 
+			
+		 }
 		 else
 		 {
-			 if(!taskInfo.isIssubpartition())
-				 return this.job.config.getQuerystatement().replace("#{partition}", " PARTITION  ("+taskInfo.getPartitionName()+")");
+			 
+			 if(!this.taskInfo.isSubblock())
+			 {
+				 if(!this.taskInfo.isLasted())
+				 {
+					 builder.append(" where ")
+						.append(this.job.config.pkname).append("<? and ")
+						.append(this.job.config.pkname).append(">=?");
+				 }
+				 else
+				 {
+					 builder.append(" where ")
+						.append(this.job.config.pkname).append("<=? and ")
+						.append(this.job.config.pkname).append(">=?");
+				 }
+			 }
 			 else
-				 return this.job.config.getQuerystatement().replace("#{partition}", " SUBPARTITION  ("+taskInfo.getSubpartition()+")");
+			 {
+				 if(!this.taskInfo.isLasted())
+				 {
+					 builder.append(" where ")
+						.append(this.job.config.pkname).append("<? and ")
+						.append(this.job.config.pkname).append(">=?");
+				 }
+				 else
+				 {
+					 if(!this.taskInfo.isSublasted())
+					 {
+						 builder.append(" where ")
+							.append(this.job.config.pkname).append("<? and ")
+							.append(this.job.config.pkname).append(">=?");
+					 }
+					 else
+					 {
+						 builder.append(" where ")
+							.append(this.job.config.pkname).append("<=? and ")
+							.append(this.job.config.pkname).append(">=?");
+					 }
+				 
+				 }
+			 }
+			
 		 }
-		}
+		 String sql = builder.toString();
+		 log.info("querystatement:"+sql);
+		 return sql;
+	}
 	 
 	 
 	 public String getSubQuerystatement() {
@@ -135,8 +203,19 @@ public class FileSegment {
 		 StringBuilder builder = new StringBuilder();
 		 builder.append("taskNo=").append(taskInfo.taskNo).append(",").append("filename=").append(taskInfo.filename).append(",")
 			.append("pagesize=").append(taskInfo.pagesize).append(",")
-			.append("start=").append(taskInfo.startoffset).append(",")
-			.append("end=").append(taskInfo.endoffset).append(",");
+			;
+		 
+		 if(Imp.numberRange(job.config.getPktype()))
+			 builder.append("start=").append(taskInfo.startoffset).append(",")
+				.append("end=").append(taskInfo.endoffset).append(",");
+		 else
+		 {
+			 Date startdate = Imp.getDateTime(job.config.getPktype(), taskInfo.startoffset);
+			 Date enddate = Imp.getDateTime(job.config.getPktype(), taskInfo.endoffset);
+			
+			 builder.append("start=").append(format.format(startdate)).append(",")
+				.append("end=").append(format.format(enddate)).append(",");
+		 }
 		 if(taskInfo.getSubpartition() != null)
 		 {
 			 builder.append("subpartition=").append(taskInfo.getSubpartition()).append(",");

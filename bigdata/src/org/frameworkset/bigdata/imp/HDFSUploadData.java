@@ -289,13 +289,19 @@ public class HDFSUploadData {
 				if (this.schema != null && !this.schema.equals(""))
 					sqlbuilder.append(config.schema).append(".");
 //				sqlbuilder.append(config.tablename).append(" #{partition}");
-				if(datablocks <= 0)
-					sqlbuilder.append(config.tablename).append(" #{partition}");
-				else
+				sqlbuilder.append(config.tablename).append(" #{partition}");
+				if(datablocks > 0)
 				{
-					sqlbuilder.append(config.tablename).append(" #{partition}").append(" where ")
-					.append(config.pkname).append("<=? and ")
-					.append(config.pkname).append(">=?");
+//					if(Imp.numberRange(pkType))
+//					{
+//						sqlbuilder.append(config.tablename).append(" #{partition}").append(" where ")
+//						.append(config.pkname).append("<=? and ")
+//						.append(config.pkname).append(">=?");
+//					}
+//					else
+//					{
+//						sqlbuilder.append(config.tablename).append(" #{partition}");
+//					}
 					config.setPartitiondataraged(true);
 				}
 				config.setQuerystatement(sqlbuilder.toString());
@@ -317,9 +323,18 @@ public class HDFSUploadData {
 				sqlbuilder.append(" from  ");
 				if (this.schema != null && !this.schema.equals(""))
 					sqlbuilder.append(config.schema).append(".");
-				sqlbuilder.append(config.tablename).append(" where ")
-						.append(config.pkname).append("<=? and ")
-						.append(config.pkname).append(">=?");
+				
+//				if(Imp.numberRange(pkType))
+//				{
+//					sqlbuilder.append(config.tablename).append(" where ")
+//					.append(config.pkname).append("<=? and ")
+//					.append(config.pkname).append(">=?");
+//				}
+//				else
+				{
+					sqlbuilder.append(config.tablename);
+				}
+				
 				config.setQuerystatement(sqlbuilder.toString());
 			} else {
 				config.setQuerystatement(this.querystatement);
@@ -641,14 +656,12 @@ public class HDFSUploadData {
 				sqlbuilder.append(" from  ");
 				if ( schema != null && ! schema.equals(""))
 					sqlbuilder.append(config.schema).append(".");
-				
-				if(datablocks <= 0)
-					sqlbuilder.append(config.tablename).append(" #{partition}");
-				else
+				sqlbuilder.append(config.tablename).append(" #{partition}");
+				if(datablocks > 0)
 				{
-					sqlbuilder.append(config.tablename).append(" #{partition}").append(" where ")
-					.append(config.pkname).append("<=? and ")
-					.append(config.pkname).append(">=?");
+//					sqlbuilder.append(config.tablename).append(" #{partition}").append(" where ")
+//					.append(config.pkname).append("<=? and ")
+//					.append(config.pkname).append(">=?");
 					config.setPartitiondataraged(true);
 				}
 				config.setQuerystatement(sqlbuilder.toString());
@@ -670,9 +683,9 @@ public class HDFSUploadData {
 				sqlbuilder.append(" from  ");
 				if (schema != null && !schema.equals(""))
 					sqlbuilder.append(config.schema).append(".");
-				sqlbuilder.append(config.tablename).append(" where ")
-						.append(config.pkname).append("<=? and ")
-						.append(config.pkname).append(">=?");
+//				sqlbuilder.append(config.tablename).append(" where ")
+//						.append(config.pkname).append("<=? and ")
+//						.append(config.pkname).append(">=?");
 				config.setQuerystatement(sqlbuilder.toString());
 			} else {
 				config.setQuerystatement( querystatement);
@@ -807,12 +820,13 @@ public class HDFSUploadData {
 	 */
 	private void spiltDateTask_(List<TaskInfo> segments, java.util.Date start, java.util.Date end,
 			int datablocks, 
-			String filebasename, String parentTaskNo,int partpositionoffset) {
+			String filebasename, String parentTaskNo,int partpositionoffset,boolean lasted) {
 		java.util.Date startoffset = start, endoffset = null;
 		int i = 0;
 		while(true)
 		{
-			endoffset = Imp.addDays(startoffset, datablocks-1, pkType);
+//			endoffset = Imp.addDays(startoffset, datablocks-1, pkType);
+			endoffset = Imp.addDays(startoffset, datablocks, pkType);
 			TaskInfo task = new TaskInfo();
 			task.startid = start.getTime();
 			task.endid = end.getTime();
@@ -823,13 +837,27 @@ public class HDFSUploadData {
 				endoffset = end;
 				
 			}
-			startoffset = Imp.addDays(endoffset, 1, pkType);
+//			startoffset = Imp.addDays(endoffset, 1, pkType);
+			startoffset = endoffset;
 			task.endoffset = endoffset.getTime();
 			task.pagesize = datablocks;
 			task.filename = filebasename + "_" + i;
 			int reali = partpositionoffset != -1?partpositionoffset+i:i;
 			task.taskNo = parentTaskNo == null ? "" + reali: parentTaskNo
 					+ "." + i;
+			if(parentTaskNo != null)
+			{
+				task.setSubblock(true);
+				task.setLasted(lasted);
+				if(reachend)
+					task.setSublasted(true);
+			}
+			else
+			{
+				if(reachend)
+					task.setLasted(true);
+			}
+			
 			segments.add( task);
 			
 			if(reachend)
@@ -1254,7 +1282,7 @@ public class HDFSUploadData {
 				if (!Imp.reachend(tempdate,enddate)) {
 					segement = this.datablocks;
 					List<TaskInfo> tempsegments = new ArrayList<TaskInfo>();
-					spiltDateTask_(tempsegments, startdate, enddate, this.datablocks, filebasename, null,partposition);
+					spiltDateTask_(tempsegments, startdate, enddate, this.datablocks, filebasename, null,partposition,false);
 					segments = new TaskInfo[tempsegments.size()];
 					tempsegments.toArray(segments);
 					splitTasks.nextpartpositionoffset = partposition+this.datablocks;
@@ -1407,7 +1435,7 @@ public class HDFSUploadData {
 					segement = this.datablocks;
 					List<TaskInfo> tempsegments = new ArrayList<TaskInfo>();
 					spiltDateTask_(tempsegments, startdate, enddate, this.datablocks,
-							 filebasename, null,-1);
+							 filebasename, null,-1,false);
 					segments = new TaskInfo[tempsegments.size()];
 					tempsegments.toArray(segments);
 					 
@@ -1837,7 +1865,7 @@ public class HDFSUploadData {
 					segement = this.subblocks;
 					List<TaskInfo> tempsegments = new ArrayList<TaskInfo>();
 					spiltDateTask_(tempsegments, startdate, enddate, this.subblocks,
-							 taskInfo.filename, taskInfo.taskNo,-1);
+							 taskInfo.filename, taskInfo.taskNo,-1,taskInfo.isLasted());
 					segments = new TaskInfo[tempsegments.size()];
 					tempsegments.toArray(segments);
 					if(this.usepartition)
@@ -1926,6 +1954,11 @@ public class HDFSUploadData {
 			return;
 		}
 		TaskInfo[] segments = splitTasks.segments;
+		for (int i = 0; i < segments.length; i++) {
+			TaskInfo task = segments[i];
+			task.setPktype(this.pkType);
+			
+		}
 		long segement = splitTasks.segement;
 		if (this.deleteParentBlockHDFS != null
 				&& deleteParentBlockHDFS.size() > 0)// 删除大块数据对应的hdfs文件，因为对应的大块数据文件已经被切分为更小的hdfs数据块文件
@@ -1942,12 +1975,7 @@ public class HDFSUploadData {
 			int servertasks = alltasks / workservers;
 			int taskdiv = alltasks % workservers;
 			 
-			for (int i = 0; i < alltasks; i++) {
-				TaskInfo task = segments[i];
-				System.out.println("start="+new Timestamp(task.getStartoffset()));
-				System.out.println("End="+new Timestamp(task.getEndoffset()));
-				
-			}
+			
 			for (int i = 0; i < workservers && i < alltasks; i++) {
 				TaskConfig config = buildTaskConfigWithID(jobstaticid);
 

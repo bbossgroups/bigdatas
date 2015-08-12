@@ -1,5 +1,8 @@
 package org.frameworkset.bigdata.imp;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class TaskInfo  implements java.io.Serializable{
 	long startoffset;
@@ -12,6 +15,10 @@ public class TaskInfo  implements java.io.Serializable{
 	private boolean issubpartition;
 	String partitionName;
 	String filename;
+	String pktype;
+	boolean lasted;
+	boolean sublasted;
+	boolean subblock;
 	/**
 	 * 如果任务被重新分配，则忽略处理
 	 */
@@ -50,9 +57,18 @@ public class TaskInfo  implements java.io.Serializable{
 		
 		 StringBuilder builder = new StringBuilder();
 		 builder.append("taskNo=").append(taskNo).append(",").append("filename=").append(filename).append(",")
-			.append("pagesize=").append(pagesize).append(",").append("subpartition=").append(subpartition).append(",").append("parentpartition=").append(partitionName).append(",")
-			.append("startoffset=").append(startoffset).append(",")
-			.append("endoffset=").append(endoffset);
+			.append("pagesize=").append(pagesize).append(",").append("subpartition=").append(subpartition).append(",").append("parentpartition=").append(partitionName).append(",");
+		 if(Imp.numberRange(pktype))
+			 builder.append("startoffset=").append(startoffset).append(",")
+				.append("endoffset=").append(endoffset);
+		 else
+		 {
+			 Date startdate = Imp.getDateTime(pktype, startoffset);
+			 Date enddate = Imp.getDateTime(pktype, endoffset);
+			 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+			 builder.append("startoffset=").append(format.format(startdate)).append(",")
+				.append("endoffset=").append(format.format(enddate));
+		 }
 		 return builder.toString();
 	 }
 	public String getTaskNo() {
@@ -84,6 +100,30 @@ public class TaskInfo  implements java.io.Serializable{
 	}
 	public void setIssubpartition(boolean issubpartition) {
 		this.issubpartition = issubpartition;
+	}
+	public String getPktype() {
+		return pktype;
+	}
+	public void setPktype(String pktype) {
+		this.pktype = pktype;
+	}
+	public boolean isLasted() {
+		return lasted;
+	}
+	public void setLasted(boolean lasted) {
+		this.lasted = lasted;
+	}
+	public boolean isSublasted() {
+		return sublasted;
+	}
+	public void setSublasted(boolean sublasted) {
+		this.sublasted = sublasted;
+	}
+	public boolean isSubblock() {
+		return subblock;
+	}
+	public void setSubblock(boolean subblock) {
+		this.subblock = subblock;
 	}
 	
 
