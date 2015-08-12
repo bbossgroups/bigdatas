@@ -174,8 +174,7 @@ public class FileSegment {
 			 }
 			
 		 }
-		 String sql = builder.toString();
-		 log.info("querystatement:"+sql);
+		 String sql = builder.toString();		
 		 return sql;
 	}
 	 
