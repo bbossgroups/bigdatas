@@ -1265,15 +1265,15 @@ public class HDFSUploadData {
 			SplitTasks splitTasks = new SplitTasks();
 			splitTasks.startid= startid;
 			splitTasks.endid = endid;
-			log.info("PK[" + this.pkName + "] partition job["
-					+ this.jobname + "]  base infomation:start data id="
-					+ startid + ",endid=" + endid + ",datablocks="
-					+ datablocks);
+			
 			if(!Imp.numberRange(pkType))//按天数切分
 			{
 				java.util.Date startdate = Imp.getDateTime(pkType, startid);
 				java.util.Date enddate = Imp.getDateTime(pkType, endid);
-				
+				log.info("PK[" + this.pkName + "] partition job["
+						+ this.jobname + "]  base infomation:start date="
+						+ startdate + ",end date=" + enddate + ",datablocks="
+						+ datablocks);
 //				java.util.Calendar c = java.util.Calendar.getInstance();
 //				c.setTime(startdate);
 //				c.add(Calendar.DAY_OF_MONTH, datablocks);
@@ -1303,7 +1303,10 @@ public class HDFSUploadData {
 			}
 			else//按数据范围切分
 			{
-				
+				log.info("PK[" + this.pkName + "] partition job["
+						+ this.jobname + "]  base infomation:start data id="
+						+ startid + ",endid=" + endid + ",datablocks="
+						+ datablocks);
 				long datas = endid - startid + 1;
 				
 				// segments[this.workservers-1] = segments[this.workservers-1] +
