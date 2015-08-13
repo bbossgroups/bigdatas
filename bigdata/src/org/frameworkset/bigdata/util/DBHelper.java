@@ -71,7 +71,7 @@ public class DBHelper {
 	        		10,
 	        		10,
 	        		20,
-	        		false,
+	        		true,
 	        		false,
 	        		null        ,false,false
 	        		);

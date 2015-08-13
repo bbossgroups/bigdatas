@@ -123,14 +123,16 @@ public class FileSegment {
 		 }
 		 if(Imp.numberRange(job.config.getPktype()))
 		 {		 
-				 
-			 builder.append(" where ")
+			 builder.append(this.job.config.getQuerystatement())
+			 		.append(" where ")
 					.append(this.job.config.pkname).append("<=? and ")
 					.append(this.job.config.pkname).append(">=?");				 
 			
 		 }
 		 else
 		 {
+			 builder.append(this.job.config.getQuerystatement());
+			 
 			 
 			 if(!this.taskInfo.isSubblock())
 			 {
