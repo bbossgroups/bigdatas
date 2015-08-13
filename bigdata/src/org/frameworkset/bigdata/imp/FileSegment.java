@@ -101,7 +101,7 @@ public class FileSegment {
 		}
 	 public String getQuerystatement() {
 		 StringBuilder builder = new StringBuilder();
-		
+		 boolean appended = false;
 		 if(this.job.config.isOnejob() || this.job.config.isUsepagine())
 		 {
 			 builder.append(this.job.config.getQuerystatement());
@@ -115,25 +115,26 @@ public class FileSegment {
 			 else
 				 builder.append(this.job.config.getQuerystatement().replace("#{partition}", " SUBPARTITION  ("+taskInfo.getSubpartition()+")"));
 			
-			 
+			 appended = true;
 			 if(!this.job.config.isPartitiondataraged())
 			 {
 				 return builder.toString();
 			 }
 		 }
+		 if(!appended)
+		 {
+			 builder.append(this.job.config.getQuerystatement());
+		 }
 		 if(Imp.numberRange(job.config.getPktype()))
 		 {		 
-			 builder.append(this.job.config.getQuerystatement())
-			 		.append(" where ")
+			
+			 builder.append(" where ")
 					.append(this.job.config.pkname).append("<=? and ")
 					.append(this.job.config.pkname).append(">=?");				 
 			
 		 }
 		 else
-		 {
-			 builder.append(this.job.config.getQuerystatement());
-			 
-			 
+		 { 
 			 if(!this.taskInfo.isSubblock())
 			 {
 				 if(!this.taskInfo.isLasted())
