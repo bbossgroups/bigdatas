@@ -156,6 +156,11 @@ public class JobStatic implements java.io.Serializable,java.lang.Cloneable{
 	{
 		return this.status == 1 || this.status == 2 || this.status == 3;
 	}
+	
+	public boolean canappendworkthread()
+	{
+		return this.status == 0;
+	}
 
 	 
 

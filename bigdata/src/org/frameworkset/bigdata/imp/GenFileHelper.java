@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
+import org.frameworkset.bigdata.util.DBHelper;
 
 public class GenFileHelper {
 	private static Logger log = Logger.getLogger(GenFileHelper.class); 
@@ -67,18 +68,47 @@ public class GenFileHelper {
 		}
 	}
 
+	/**
+	 * 追加工作线程
+	 * @param threadNums 追加工作线程数
+	 */
+	public void addGenThread(int threadNums)
+	{
+		if(!this.job.jobStatic.canappendworkthread())
+			return;
+		int tsize = this.genthreads.size();
+		if(this.job.config.isUsepool())
+		{
+			DBHelper.increamentMaxTotalConnections(this.getDBName(), threadNums);
+		}
+		for(int i = 0; i < threadNums; i ++)
+		{
+			addWorkthread(tsize+ i);
+		}
+	}
+	
+	private void addWorkthread(int i)
+	{
+		GenFileWork gw = new GenFileWork(this, genfilecount,
+				job.getGenfileQueues(), job.getUpfileQueues(), null);
+		log.info("start task handle thread["+config.filebasename+"-"+i+"]");
+		Thread thread = new Thread(gw,config.filebasename+"-"+i);
+		genthreads.add(thread);
+		thread.start();
+	}
 	public void run(TaskConfig config) {
 //		CyclicBarrier barrier = new CyclicBarrier(config.getGeneworkthreads());
 //		genfilecount = new AtomicInteger(config.getTasks().length);
 
 		genthreads = new ArrayList<Thread>(config.getGeneworkthreads());
 		for (int i = 0; i < config.getGeneworkthreads(); i++) {
-			GenFileWork gw = new GenFileWork(this, genfilecount,
-					job.getGenfileQueues(), job.getUpfileQueues(), null);
-			log.info("start task handle thread["+config.filebasename+"-"+i+"]");
-			Thread thread = new Thread(gw,config.filebasename+"-"+i);
-			genthreads.add(thread);
-			thread.start();
+//			GenFileWork gw = new GenFileWork(this, genfilecount,
+//					job.getGenfileQueues(), job.getUpfileQueues(), null);
+//			log.info("start task handle thread["+config.filebasename+"-"+i+"]");
+//			Thread thread = new Thread(gw,config.filebasename+"-"+i);
+//			genthreads.add(thread);
+//			thread.start();
+			 addWorkthread(i);
 		}
 
 		if(config.isGenlocalfile())

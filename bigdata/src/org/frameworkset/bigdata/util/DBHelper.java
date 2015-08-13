@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.HDFSUploadData;
 import org.frameworkset.bigdata.imp.TaskConfig;
 
+import com.frameworkset.common.poolman.DBUtil;
 import com.frameworkset.common.poolman.SQLExecutor;
 import com.frameworkset.common.poolman.util.SQLUtil;
 
@@ -153,6 +154,11 @@ public class DBHelper {
 		        		);
 		}
  
+	}
+	
+	public static void increamentMaxTotalConnections(String dbname,int nums)
+	{
+		DBUtil.increamentMaxTotalConnections(dbname, nums);
 	}
 
 }

@@ -104,6 +104,8 @@ public class HDFSUploadData {
 	 * 指定要停止的数据源清单，多个用逗号分隔
 	 */
 	private String stopdbnames;
+	
+	private String addworkthreads;
 
 	private String localpath;
 	private String tablename;
@@ -238,6 +240,7 @@ public class HDFSUploadData {
 		config.subblocks = this.subblocks;
 		config.setDeletefiles(deletefiles);
 		config.setStopdbnames(stopdbnames);
+		config.setAddworkthreads(addworkthreads);
 		config.setReassigntaskNode(reassigntaskNode);
 		config.setReassigntaskJobname(reassigntaskJobname);
 		config.excludeblocks = this.excludeblocks_str;
@@ -534,7 +537,14 @@ public class HDFSUploadData {
 				"deletefiles");
 		String stopdbnames = context.getStringExtendAttribute(jobname,
 				"stopdbnames");
+		
 		config.setStopdbnames(stopdbnames);
+		
+		
+		String addworkthreads = context.getStringExtendAttribute(jobname,
+				"addworkthreads");
+		 
+		config.setAddworkthreads(addworkthreads);
 
 		String reassigntaskNode = context.getStringExtendAttribute(jobname,
 				"reassigntaskNode");
@@ -2029,6 +2039,10 @@ public class HDFSUploadData {
 		this.deletefiles = context.getStringExtendAttribute(jobname,
 				"deletefiles");
 		stopdbnames = context.getStringExtendAttribute(jobname, "stopdbnames");
+		addworkthreads = context.getStringExtendAttribute(jobname,
+				"addworkthreads");
+		 
+		
 		reassigntaskNode = context.getStringExtendAttribute(jobname,
 				"reassigntaskNode");
 		
@@ -2821,6 +2835,14 @@ public class HDFSUploadData {
 
 	public void setPkType(String pkType) {
 		this.pkType = pkType;
+	}
+
+	public String getAddworkthreads() {
+		return addworkthreads;
+	}
+
+	public void setAddworkthreads(String addworkthreads) {
+		this.addworkthreads = addworkthreads;
 	}
 
 }

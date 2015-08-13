@@ -25,6 +25,7 @@ public class ExecutorJob {
 	 AtomicInteger genfilecount;
 	 AtomicInteger upfilecount ;
 	 List<TaskInfo> tasks;
+	 GenFileHelper  genFileWork;
 	 
 	 public int getErrorrowslimit()
 	 {
@@ -127,6 +128,14 @@ public class ExecutorJob {
 		}
 	}
 	
+	public void addWorkThread(int nums)
+	{
+		if(this.genFileWork != null)
+		{
+			genFileWork.addGenThread(nums);
+		}
+	}
+	
 	public FileSegment createSingleFileSegment(int fileNo,long startid)
 	{
 		 FileSegment segement = new FileSegment();
@@ -152,7 +161,7 @@ public class ExecutorJob {
 	
 	private void run(int startpos)
 	{
-		 GenFileHelper  genFileWork = new GenFileHelper(this);
+		 genFileWork = new GenFileHelper(this);
 		 genFileWork.run(  config);		
 		 StringBuilder errorinfo = new StringBuilder();
 //		 int pos = 0;

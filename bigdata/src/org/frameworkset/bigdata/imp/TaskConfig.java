@@ -94,6 +94,8 @@ public class TaskConfig implements java.io.Serializable{
 	 * 指定要停止的数据源清单，多个用逗号分隔
 	 */
 	private String stopdbnames;
+	private String addworkthreads;
+
 	/**
 	 * 当指定了具体的任务处理数据块blocks，则可以设定每块可以直接拆分的子数据块这样可以提升系统处理速度
 	 */
@@ -564,6 +566,12 @@ public class TaskConfig implements java.io.Serializable{
 	}
 	public void setPktype(String pktype) {
 		this.pktype = pktype;
+	}
+	public String getAddworkthreads() {
+		return addworkthreads;
+	}
+	public void setAddworkthreads(String addworkthreads) {
+		this.addworkthreads = addworkthreads;
 	}
 	
 //	 public boolean dateRange()
