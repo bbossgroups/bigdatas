@@ -18,7 +18,7 @@ http://yin-bp.iteye.com/
 
 6.通过管理监控端，可以实时监控作业在各个数据处理节点作业任务的实时运行状态，查看作业的历史执行状态，方便地实现提交新的作业、重新执行作业、停止正在执行的作业、清除作业执行监控数据、同步作业任务执行状态等操作
 # 工具架构拓扑图： 
-
+![Bigdata Architecture](http://dl2.iteye.com/upload/attachment/0110/6116/18258fcc-a9ff-3823-9c86-623585c90efc.png)
 
 # 工具采用的技术体系：
 
@@ -50,7 +50,8 @@ https://github.com/bbossgroups/bigdatas/releases
 # 操作使用文档
 [大数据抽取工具管理操作手册.docx][].
 
-## bboss项目下载地址，参考文档：http://yin-bp.iteye.com/blog/1080824
+## bboss项目下载地址，参考文档：
+http://yin-bp.iteye.com/blog/1080824
 
 ## License
 
