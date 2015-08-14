@@ -42,7 +42,7 @@ import com.frameworkset.util.SimpleStringUtil;
 
 public class HDFSUploadData {
 	public String HADOOP_PATH;
-
+	
 	private static Logger log = Logger.getLogger(HDFSUploadData.class);
 
 	public static final SimpleEventType hdfsuploadevent = new SimpleEventType(
@@ -60,6 +60,8 @@ public class HDFSUploadData {
 
 	public static final SimpleEventType hdfs_upload_monitor_stopdatasource_commond = new SimpleEventType(
 			"hdfs_upload_monitor_stopdatasource_commond");
+	public static final SimpleEventType hdfs_upload_monitor_addworkthread_commond = new SimpleEventType(
+			"hdfs_upload_monitor_addworkthread_commond");
 
 	public static final SimpleEventType hdfs_upload_monitor_reassigntasks_request_commond = new SimpleEventType(
 			"hdfs_upload_monitor_reassigntasks_request_commond");
@@ -106,7 +108,7 @@ public class HDFSUploadData {
 	private String stopdbnames;
 	
 	private String addworkthreads;
-
+	private String adjustJobname;
 	private String localpath;
 	private String tablename;
 	private String schema;
@@ -241,6 +243,7 @@ public class HDFSUploadData {
 		config.setDeletefiles(deletefiles);
 		config.setStopdbnames(stopdbnames);
 		config.setAddworkthreads(addworkthreads);
+		config.setAdjustJobname(adjustJobname);
 		config.setReassigntaskNode(reassigntaskNode);
 		config.setReassigntaskJobname(reassigntaskJobname);
 		config.excludeblocks = this.excludeblocks_str;
@@ -546,6 +549,11 @@ public class HDFSUploadData {
 		 
 		config.setAddworkthreads(addworkthreads);
 
+		String adjustJobname = context.getStringExtendAttribute(jobname,
+				"adjustJobname");
+		 
+		config.setAdjustJobname(adjustJobname);
+		
 		String reassigntaskNode = context.getStringExtendAttribute(jobname,
 				"reassigntaskNode");
 		String reassigntaskJobname = context.getStringExtendAttribute(jobname,
@@ -2042,7 +2050,10 @@ public class HDFSUploadData {
 		addworkthreads = context.getStringExtendAttribute(jobname,
 				"addworkthreads");
 		 
-		
+		  adjustJobname = context.getStringExtendAttribute(jobname,
+				"adjustJobname");
+		 
+		 
 		reassigntaskNode = context.getStringExtendAttribute(jobname,
 				"reassigntaskNode");
 		
@@ -2242,6 +2253,41 @@ public class HDFSUploadData {
 
 		EventHandle.getInstance().change(event, false);
 		log.info("提交停止数据源[" + this.stopdbnames + "]作业请求成功.");
+	}
+	
+	private Map<String,Integer> parserAddworkthreadInfos(AddWorkthreads addWorkthreads)
+	{
+		String[] stres = addWorkthreads.getAddworkthreads().split("\\,");
+		Map<String,Integer>  datas = new HashMap<String,Integer>(stres.length);
+		for(String str:stres)
+		{
+			if(str.trim().length() == 0)
+				continue;
+			String servers[] = str.split("\\:");
+			if(servers.length < 2 || servers[0].trim().length() == 0 || servers[1].trim().length() == 0)
+				continue;
+			
+			datas.put(servers[0].trim(), Integer.parseInt(servers[1].trim()));
+		}
+		return datas;
+		
+	}
+	private void doAddWorkthreads() throws Exception {
+		String jobstaticid = java.util.UUID.randomUUID().toString();
+		AddWorkthreads addWorkthreads = new AddWorkthreads();
+		addWorkthreads.setJobname(this.jobname);
+		addWorkthreads.setAddworkthreads(addworkthreads);
+		addWorkthreads.setAdjustJobname(adjustJobname);
+		addWorkthreads.setServerWorkthreadnums(this.parserAddworkthreadInfos(addWorkthreads));
+		addWorkthreads.setJobstaticid(jobstaticid);
+		Event<AddWorkthreads> event = new EventImpl<AddWorkthreads>(addWorkthreads,
+				hdfs_upload_monitor_addworkthread_commond);
+		/**
+		 * 消息以异步方式传递
+		 */
+
+		EventHandle.getInstance().change(event, false);
+		log.info("提交增加节点[" + this.addworkthreads + "]作业["+adjustJobname+"]工作线程请求成功.");
 	}
 
 	
@@ -2451,7 +2497,12 @@ public class HDFSUploadData {
 			if (this.deletefiles != null && !this.deletefiles.trim().equals(""))// 如果是删除文件指令，则删除文件
 			{
 				doDeleteFiles();
-			} else if (this.stopdbnames != null
+			} 
+			 else if (this.addworkthreads != null
+						&& !this.addworkthreads.trim().equals("")) {
+					this.doAddWorkthreads();;
+				} 
+			else if (this.stopdbnames != null
 					&& !this.stopdbnames.trim().equals("")) {
 				this.doStopdbnames();
 			} else if (this.reassigntaskNode != null

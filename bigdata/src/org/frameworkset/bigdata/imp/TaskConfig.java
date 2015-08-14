@@ -95,6 +95,8 @@ public class TaskConfig implements java.io.Serializable{
 	 */
 	private String stopdbnames;
 	private String addworkthreads;
+	
+	private String adjustJobname;
 
 	/**
 	 * 当指定了具体的任务处理数据块blocks，则可以设定每块可以直接拆分的子数据块这样可以提升系统处理速度
@@ -572,6 +574,12 @@ public class TaskConfig implements java.io.Serializable{
 	}
 	public void setAddworkthreads(String addworkthreads) {
 		this.addworkthreads = addworkthreads;
+	}
+	public String getAdjustJobname() {
+		return adjustJobname;
+	}
+	public void setAdjustJobname(String adjustJobname) {
+		this.adjustJobname = adjustJobname;
 	}
 	
 //	 public boolean dateRange()

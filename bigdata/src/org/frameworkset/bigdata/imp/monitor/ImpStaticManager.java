@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.frameworkset.bigdata.imp.AddWorkthreads;
+import org.frameworkset.bigdata.imp.AddWorkthreadsJob;
 import org.frameworkset.bigdata.imp.ExecutorJob;
 import org.frameworkset.bigdata.imp.HDFSUploadData;
 import org.frameworkset.bigdata.imp.Imp;
@@ -124,6 +126,21 @@ public class ImpStaticManager implements Listener<Object>{
 			jobStatic.setStartTime(System.currentTimeMillis());
 			jobStatic.setJobname(ds.getJobname());
 			localjobstatics.put(ds.getJobname(), jobStatic);
+			return jobStatic;
+		}
+	}
+	
+	public JobStatic addAddWorkthreadsJobStatic(AddWorkthreads addWorkthreads)
+	{
+		synchronized(localjobstaticsLock)
+		{
+			JobStatic jobStatic = new JobStatic();
+			jobStatic.setJobstaticid(addWorkthreads.getJobstaticid());
+			jobStatic.setConfig("add Work threads:"+addWorkthreads.getAddworkthreads());
+			jobStatic.setStatus(0);
+			jobStatic.setStartTime(System.currentTimeMillis());
+			jobStatic.setJobname(addWorkthreads.getJobname());
+			localjobstatics.put(addWorkthreads.getJobname(), jobStatic);
 			return jobStatic;
 		}
 	}
@@ -326,6 +343,28 @@ public class ImpStaticManager implements Listener<Object>{
 					log.info("Execute Stop DS Job end:"+stopdbnames.toString() );
 				}
 			}).start();
+			
+		}
+		
+		else if(command.equals(HDFSUploadData.hdfs_upload_monitor_addworkthread_commond))
+		{
+			final AddWorkthreads addWorkthreads = (AddWorkthreads)e_.getSource();
+			final Integer nums = addWorkthreads.getServerWorkthreadnums().get(Imp.getImpStaticManager().getLocalNode());
+			if(nums != null)
+			{
+				new Thread(new Runnable(){
+					public void run()
+					{
+						AddWorkthreadsJob addWorkthreadsJob = new AddWorkthreadsJob();
+						addWorkthreadsJob.execute(addWorkthreads,nums);
+						log.info("为作业["+addWorkthreads.getAdjustJobname()+"]添加"+nums+"个工作线程任务处理线程成功." );
+					}
+				}).start();
+			}
+			else
+			{
+				log.info("忽略添加作业任务处理线程事件，没有为作业["+addWorkthreads.getAdjustJobname()+"]指定需要添加的工作线程任务处理线程数." );
+			}
 			
 		}
 		
