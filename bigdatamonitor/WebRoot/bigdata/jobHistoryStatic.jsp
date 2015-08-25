@@ -321,7 +321,7 @@ function viewJobstatics(jobname,jobstaticid)
 										成功行数:<pg:cell colName="handlerows" />&nbsp;&nbsp;
 										错误行数:<pg:cell colName="errorrows" />
 										</td>
-										<td ><pg:cell colName="taskInfo" /></td>
+										<td ><pg:cell colName="taskInfo"  htmlEncode="true" /></td>
 										<td ><pg:cell colName="errorInfo" /></td>
 
 									</tr>
