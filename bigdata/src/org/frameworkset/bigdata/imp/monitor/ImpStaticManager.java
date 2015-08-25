@@ -349,7 +349,10 @@ public class ImpStaticManager implements Listener<Object>{
 		else if(command.equals(HDFSUploadData.hdfs_upload_monitor_addworkthread_commond))
 		{
 			final AddWorkthreads addWorkthreads = (AddWorkthreads)e_.getSource();
-			final Integer nums = addWorkthreads.getServerWorkthreadnums().get(Imp.getImpStaticManager().getLocalNode());
+			Integer temp = addWorkthreads.getServerWorkthreadnums().get(Imp.getImpStaticManager().getLocalNode());
+			if(temp == null)
+				temp =  addWorkthreads.getServerWorkthreadnums().get("all");
+			final Integer nums = temp;
 			if(nums != null)
 			{
 				new Thread(new Runnable(){
@@ -363,6 +366,7 @@ public class ImpStaticManager implements Listener<Object>{
 			}
 			else
 			{
+				
 				log.info("忽略添加作业任务处理线程事件，没有为作业["+addWorkthreads.getAdjustJobname()+"]指定需要添加的工作线程任务处理线程数." );
 			}
 			
