@@ -1246,8 +1246,8 @@ public class HDFSUploadData {
 		    }
 		    else if(starttype == java.sql.Types.DATE)
 		    {
-		    	 Date startid_ = db.getDate(0, "startid");
-		    	Date endid_ = db.getDate(0, "endid");
+		    	 Date startid_ = db.getTimestamp(0, "startid");
+		    	Date endid_ = db.getTimestamp(0, "endid");
 		    	if(startid_ == null)
 		    	{
 		    		log.info("PK[" + this.pkName + "] partition job["
@@ -1313,6 +1313,7 @@ public class HDFSUploadData {
 					task.pagesize = datablocks;
 					task.filename = filebasename + "_0";
 					task.taskNo = partposition+"";
+					task.setLasted(true);
 					segement = datablocks;
 					segments = new TaskInfo[1];
 					segments[0] = task;
@@ -1413,8 +1414,8 @@ public class HDFSUploadData {
 			    }
 			    else if(starttype == java.sql.Types.DATE)
 			    {
-			    	 Date startid_ = db.getDate(0, "startid");
-			    	Date endid_ = db.getDate(0, "endid");
+			    	 Date startid_ = db.getTimestamp(0, "startid");
+			    	Date endid_ = db.getTimestamp(0, "endid");
 			    	if(startid_ == null)
 			    	{
 			    		log.info("PK[" + this.pkName + "] partition job["
@@ -1468,6 +1469,7 @@ public class HDFSUploadData {
 					task.endoffset = endid;
 					task.pagesize = datablocks;
 					task.filename = filebasename + "_0";
+					task.setLasted(true);
 					task.taskNo = "0";
 					segement = datablocks;
 					segments = new TaskInfo[1];

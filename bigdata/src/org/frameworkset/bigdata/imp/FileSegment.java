@@ -178,6 +178,7 @@ public class FileSegment {
 			
 		 }
 		 String sql = builder.toString();		
+		
 		 return sql;
 	}
 	 
@@ -216,7 +217,10 @@ public class FileSegment {
 			 Date enddate = Imp.getDateTime(job.config.getPktype(), taskInfo.endoffset);
 			
 			 builder.append("start=").append(format.format(startdate)).append(",")
-				.append("end=").append(format.format(enddate)).append(",");
+				.append("end=").append(format.format(enddate)).append(",").append(",lasted=").append(taskInfo.lasted);
+			 if(taskInfo.subblock)
+				 builder.append(",sublasted=").append(taskInfo.sublasted);
+			 builder.append(",querystatement=").append(this.getQuerystatement());
 		 }
 		 if(taskInfo.getSubpartition() != null)
 		 {

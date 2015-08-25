@@ -67,7 +67,9 @@ public class TaskInfo  implements java.io.Serializable{
 			 Date enddate = Imp.getDateTime(pktype, endoffset);
 			 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 			 builder.append("startoffset=").append(format.format(startdate)).append(",")
-				.append("endoffset=").append(format.format(enddate));
+				.append("endoffset=").append(format.format(enddate)).append(",lasted=").append(this.lasted);
+			 if(this.subblock)
+				 builder.append(",sublasted=").append(this.sublasted);
 		 }
 		 return builder.toString();
 	 }

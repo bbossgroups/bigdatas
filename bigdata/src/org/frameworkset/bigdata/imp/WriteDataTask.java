@@ -35,6 +35,31 @@ public class WriteDataTask {
 	 PoolManResultSetMetaData metaData;
 	 PoolManResultSetMetaData submetaData;
 	 StringBuilder buidler = null;
+	 
+	 private Object handleDate(ResultSet row,int i)
+	 {
+		 Object value = null;
+		 try {
+				try {
+					value = row.getTimestamp(i+1);
+					if(value != null)
+						value = ((java.sql.Timestamp)value).getTime();
+					else
+						value  = 0;
+				} catch (Exception e) {
+					value = row.getDate(i+1);
+					if(value != null)
+						value = ((java.sql.Date)value).getTime();
+					else
+						value  = 0;
+					
+				}
+				
+			} catch (Exception e) {
+				value  = 0;
+			}
+		 return value;
+	 }
 	private Object getValue(int colType,FileSegment fileSegment ,ResultSet row,int i,String colName) throws Exception
 	{
 		Object value = null;
@@ -54,15 +79,16 @@ public class WriteDataTask {
 			}
 			else if(colType == java.sql.Types.DATE)
 			{
-				try {
-					value = row.getDate(i+1);
-					if(value != null)
-						value = ((java.sql.Date)value).getTime();
-					else
-						value  = 0;
-				} catch (Exception e) {
-					value  = 0;
-				}
+//				try {
+//					value = row.getDate(i+1);
+//					if(value != null)
+//						value = ((java.sql.Date)value).getTime();
+//					else
+//						value  = 0;
+//				} catch (Exception e) {
+//					value  = 0;
+//				}
+				value = handleDate(row,i);
 			}
 			else
 			{
@@ -388,7 +414,7 @@ public class WriteDataTask {
 							throw new ForceStopException();
 					}
 		    		
-		    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),new java.sql.Date(fileSegment.getEndoffset()),new java.sql.Date(fileSegment.getStartoffset()));
+		    	}, fileSegment.getDBName(), fileSegment.getQuerystatement(),new java.sql.Timestamp(fileSegment.getEndoffset()),new java.sql.Timestamp(fileSegment.getStartoffset()));
 			}
 			else if(fileSegment.timestampRange())
 			{

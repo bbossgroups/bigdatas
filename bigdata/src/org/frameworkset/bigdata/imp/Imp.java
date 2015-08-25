@@ -309,7 +309,7 @@ public class Imp {
 	 {
 		 if(dateRange(pktype))
 		 {
-			return new java.sql.Date(time) ;
+			return new java.sql.Timestamp(time) ;
 		 }
 		 else
 		 {

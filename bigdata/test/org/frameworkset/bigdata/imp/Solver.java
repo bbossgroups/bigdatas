@@ -1,8 +1,8 @@
 package org.frameworkset.bigdata.imp;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
+import com.frameworkset.common.poolman.PreparedDBUtil;
 import com.frameworkset.common.poolman.SQLExecutor;
+import com.frameworkset.common.poolman.handle.ResultSetNullRowHandler;
 import com.frameworkset.common.poolman.util.SQLUtil;
 
 public class Solver {
@@ -113,24 +115,25 @@ public class Solver {
 //	        		false,
 //	        		null        ,true,false
 //	        		);
-////		String t = "size:aaaa";
-////		System.out.println(t.substring(5));
+//////		String t = "size:aaaa";
+//////		System.out.println(t.substring(5));
 //		SQLExecutor.queryWithDBNameByNullRowHandler(new ResultSetNullRowHandler(){
 //			
 //		@Override
 //		public void handleRow(ResultSet row) throws Exception {
 //			 
 //			try {
-//				row.getString("SPEED");
-//				System.out.println("getString:"+row.getString("SPEED"));
+////				row.getString("SPEED");
+//				System.out.println("getString:"+row.getDate("s"));
+//				System.out.println("getString:"+row.getDate("e"));
 //			} catch (Exception e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
 //			try {
 //				
-//				System.out.println("Object:"+row.getObject("SPEED"));
-//				System.out.println("double:"+row.getDouble("SPEED"));
+//				System.out.println("Object:"+row.getObject("s"));
+//				System.out.println("double:"+row.getObject("e"));
 //			} catch (Exception e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
@@ -138,40 +141,50 @@ public class Solver {
 //			 
 //		}
 //		
-//	}, "test", "select * from GPS_RESULT partition(TP_GPS_RESULT_201502) where gpsid='31906913' and GPID=2398426075");
+//	}, "test", "select min(dt) s,max(dt) e from  QZJIEM.OLD_SANY_QZJ_RESULT  PARTITION  (TP_SANY_QZJ_RESULT_201208)");
+//		PreparedDBUtil db = new PreparedDBUtil();
+//		db.preparedSelect("test", "select min(dt) s,max(dt) e from  QZJIEM.OLD_SANY_QZJ_RESULT  PARTITION  (TP_SANY_QZJ_RESULT_201208)");
+//		db.executePrepared();	
 //		double dd = 1.30020034599143E-115;
 //		System.out.println(oracle.sql.NUMBER.toText(dd));
 		
-		System.out.println("sub:test".substring("sub:".length()));
-		
-		
-		SQLUtil.startPool("test","oracle.jdbc.driver.OracleDriver","jdbc:oracle:thin:@//10.0.15.51:1521/orcl","testpdp1","testpdp1",
-		 "true",
-		 null,//"READ_COMMITTED",
-		"select 1 from dual",
-		 "jndi-test",   
-		 2,
-		 2,
-		 2,
-   		false,
-   		false,
-   		null        ,true,false
-   		);
+//		System.out.println("sub:test".substring("sub:".length()));
+//		
+//		
+//		SQLUtil.startPool("test","oracle.jdbc.driver.OracleDriver","jdbc:oracle:thin:@//10.0.15.51:1521/orcl","testpdp1","testpdp1",
+//		 "true",
+//		 null,//"READ_COMMITTED",
+//		"select 1 from dual",
+//		 "jndi-test",   
+//		 2,
+//		 2,
+//		 2,
+//   		false,
+//   		false,
+//   		null        ,true,false
+//   		);
 		java.text.SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") ;
+//		java.sql.PreparedStatement s;
+//		s.setDate(parameterIndex, x);
 		Timestamp startdate = new Timestamp(format.parse("2011-10-01 00:00:00").getTime());  
-		format = new SimpleDateFormat("yyyy_MM_dd") ;
-		for(int i = 0; i < 27; i ++)
-		{
-			
-			String partname ="part"+ format.format(startdate);
-			System.out.println("startdate:"+startdate);
-			test(partname,startdate,i);
-			java.util.Calendar c = java.util.Calendar.getInstance();
-			c.setTime(startdate);
-			c.add(Calendar.MONTH, 1);
-			startdate = new Timestamp(c.getTimeInMillis());
-			
-		}
+//		format = new SimpleDateFormat("yyyy_MM_dd") ;
+//		for(int i = 0; i < 27; i ++)
+//		{
+//			
+//			String partname ="part"+ format.format(startdate);
+//			System.out.println("startdate:"+startdate);
+//			test(partname,startdate,i);
+//			java.util.Calendar c = java.util.Calendar.getInstance();
+//			c.setTime(startdate);
+//			c.add(Calendar.MONTH, 1);
+//			startdate = new Timestamp(c.getTimeInMillis());
+//			
+//		}
+		System.out.println("LLLL:"+format.format(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime())));
+		System.out.println(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime()));
+		System.out.println("sss:+"+new java.util.Date(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime()).getTime()));
+		
+		System.out.println(format.parse("2012-08-31 23:59:59"));
 	}
 	
 	static void test(String partname,Timestamp date,int count) throws SQLException
