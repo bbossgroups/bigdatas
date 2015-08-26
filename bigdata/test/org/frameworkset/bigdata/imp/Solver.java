@@ -163,28 +163,66 @@ public class Solver {
 //   		false,
 //   		null        ,true,false
 //   		);
-		java.text.SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") ;
-//		java.sql.PreparedStatement s;
-//		s.setDate(parameterIndex, x);
-		Timestamp startdate = new Timestamp(format.parse("2011-10-01 00:00:00").getTime());  
-//		format = new SimpleDateFormat("yyyy_MM_dd") ;
-//		for(int i = 0; i < 27; i ++)
-//		{
-//			
-//			String partname ="part"+ format.format(startdate);
-//			System.out.println("startdate:"+startdate);
-//			test(partname,startdate,i);
-//			java.util.Calendar c = java.util.Calendar.getInstance();
-//			c.setTime(startdate);
-//			c.add(Calendar.MONTH, 1);
-//			startdate = new Timestamp(c.getTimeInMillis());
-//			
-//		}
-		System.out.println("LLLL:"+format.format(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime())));
-		System.out.println(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime()));
-		System.out.println("sss:+"+new java.util.Date(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime()).getTime()));
+//		java.text.SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") ;
+////		java.sql.PreparedStatement s;
+////		s.setDate(parameterIndex, x);
+//		Timestamp startdate = new Timestamp(format.parse("2011-10-01 00:00:00").getTime());  
+////		format = new SimpleDateFormat("yyyy_MM_dd") ;
+////		for(int i = 0; i < 27; i ++)
+////		{
+////			
+////			String partname ="part"+ format.format(startdate);
+////			System.out.println("startdate:"+startdate);
+////			test(partname,startdate,i);
+////			java.util.Calendar c = java.util.Calendar.getInstance();
+////			c.setTime(startdate);
+////			c.add(Calendar.MONTH, 1);
+////			startdate = new Timestamp(c.getTimeInMillis());
+////			
+////		}
+//		System.out.println("LLLL:"+format.format(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime())));
+//		System.out.println(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime()));
+//		System.out.println("sss:+"+new java.util.Date(new java.sql.Date(format.parse("2012-08-31 23:59:59").getTime()).getTime()));
+//		
+//		System.out.println(format.parse("2012-08-31 23:59:59"));
 		
-		System.out.println(format.parse("2012-08-31 23:59:59"));
+		List<String> t = new ArrayList<String>();
+		for(int i = 0;  i < 10; i ++)
+		{
+			t.add(""+i);
+		}
+		int i = 0;
+		try {
+			for(String d :t)
+			{
+				i ++;
+				System.out.println("error:"+d);
+				if(i == 1)
+				{
+					t.add("10");
+					t.add("11");
+				}
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		 t = new ArrayList<String>();
+			for(int k = 0;  k < 10; k ++)
+			{
+				t.add(""+k);
+			}
+		for(int j = 0; j <t.size(); j ++)
+		{
+			String d = t.get(j);
+			System.out.println("d:"+d);
+			if(j == 1)
+			{
+				t.add("10");
+				t.add("11");
+			}
+		}
 	}
 	
 	static void test(String partname,Timestamp date,int count) throws SQLException

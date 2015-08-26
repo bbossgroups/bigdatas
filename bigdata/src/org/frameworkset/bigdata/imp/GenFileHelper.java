@@ -49,22 +49,28 @@ public class GenFileHelper {
 	}
 
 	public void join() {
-		for (Thread thread : genthreads)
+		for (int i = 0; i < genthreads.size(); i ++)
+		{
+			Thread thread = genthreads.get(i);
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
 		if(config.isGenlocalfile())
 		{
-			for (Thread thread : upthreads)
+			for (int i = 0; i< upthreads.size(); i ++)
+			{
+				Thread thread = upthreads.get(i);
 				try {
 					thread.join();
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
 		}
 	}
 
