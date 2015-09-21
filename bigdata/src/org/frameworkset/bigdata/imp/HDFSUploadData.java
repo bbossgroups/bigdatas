@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -138,6 +136,10 @@ public class HDFSUploadData {
 	boolean genlocalfile;
 	boolean clearhdfsfiles;
 	String querystatement;
+	/**
+	 * 查询分区sql
+	 */
+	String querypartitionstmt;
 	String limitstatement;
 	String countstatement;
 	String pageinestatement;
@@ -250,6 +252,7 @@ public class HDFSUploadData {
 		config.blocks = this.blocks_str;
 		config.setUsepartition(this.usepartition);
 		config.setPartitions(partitions);
+		config.setQuerypartitionstmt(querypartitionstmt);
 		config.setExcludepartitions(excludepartitions);
 		config.setUsesubpartition(usesubpartition);
 		config.setSubtablename(subtablename);;
@@ -562,8 +565,11 @@ public class HDFSUploadData {
 				"usepartition",false);
 		String partitions = context.getStringExtendAttribute(jobname,
 				"partitions");
-		config.setPartitions(partitions);
 		
+		config.setPartitions(partitions);
+		String querypartitionstmt = context.getStringExtendAttribute(jobname,
+				"querypartitionstmt");
+		config.setQuerypartitionstmt(querypartitionstmt);
 		String excludepartitions = context.getStringExtendAttribute(jobname,
 				"excludepartitions");
 		boolean usesubpartition = context.getBooleanExtendAttribute(jobname,
@@ -1179,14 +1185,21 @@ public class HDFSUploadData {
 		List<String> partitions = null;
 		
 		StringBuilder queryPartitions = new StringBuilder();
-		if(!SimpleStringUtil.isEmpty(schema))
+		if(this.querypartitionstmt == null || querypartitionstmt.equals(""))
 		{
-			queryPartitions.append("SELECT PARTITION_NAME FROM ALL_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') and table_owner='").append(this.schema).append("'  order by PARTITION_NAME");
+			if(!SimpleStringUtil.isEmpty(schema))
+			{
+				queryPartitions.append("SELECT PARTITION_NAME FROM ALL_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') and table_owner='").append(this.schema).append("'  order by PARTITION_NAME");
+			}
+			else
+				queryPartitions.append("SELECT PARTITION_NAME FROM USER_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') order by PARTITION_NAME");
+			
+			partitions = SQLExecutor.queryListWithDBName(String.class, this.dbname,queryPartitions.toString());
 		}
 		else
-			queryPartitions.append("SELECT PARTITION_NAME FROM USER_TAB_PARTITIONS WHERE TABLE_NAME=upper('").append(this.tablename).append("') order by PARTITION_NAME");
-		
-		partitions = SQLExecutor.queryListWithDBName(String.class, this.dbname,queryPartitions.toString());
+		{
+			partitions = SQLExecutor.queryListWithDBName(String.class, this.dbname,querypartitionstmt);
+		}
 		return handlePartitions( partitions);
 	}
 	
@@ -2139,6 +2152,8 @@ public class HDFSUploadData {
 				"usepartition",false);
 		partitions = context.getStringExtendAttribute(jobname,
 				"partitions");
+		querypartitionstmt= context.getStringExtendAttribute(jobname,
+				"querypartitionstmt");
 		excludepartitions = context.getStringExtendAttribute(jobname,
 				"excludepartitions");
 		usesubpartition = context.getBooleanExtendAttribute(jobname,

@@ -25,6 +25,7 @@ public class TaskConfig implements java.io.Serializable{
 	
 	private boolean partitiondataraged;
 	private String partitions;
+	private String querypartitionstmt;
 	private String excludepartitions;
 	private boolean usesubpartition = true;
 	private String leftJoinby;
@@ -128,6 +129,10 @@ public class TaskConfig implements java.io.Serializable{
 		{
 			builder.append("excludepartitions=").append(this.excludepartitions).append(",")
 			.append("partitions=").append(this.partitions).append(",");
+			if(this.querypartitionstmt != null)
+			{
+				builder.append("querypartitionstmt=").append(this.querypartitionstmt).append(",");
+			}
 		}
 		
 		if(driver != null && driver.trim().length() > 0)
@@ -580,6 +585,12 @@ public class TaskConfig implements java.io.Serializable{
 	}
 	public void setAdjustJobname(String adjustJobname) {
 		this.adjustJobname = adjustJobname;
+	}
+	public String getQuerypartitionstmt() {
+		return querypartitionstmt;
+	}
+	public void setQuerypartitionstmt(String querypartitionstmt) {
+		this.querypartitionstmt = querypartitionstmt;
 	}
 	
 //	 public boolean dateRange()
