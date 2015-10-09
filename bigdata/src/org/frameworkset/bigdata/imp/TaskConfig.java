@@ -69,6 +69,7 @@ public class TaskConfig implements java.io.Serializable{
 	boolean genlocalfile;
 	String datatype;
 	private String querystatement;
+	int fetchsize;
 	/**
 	 * 作业任务最大允许错误行数，如果超过这个错误行数，则强制终止作业执行
 	 */
@@ -591,6 +592,12 @@ public class TaskConfig implements java.io.Serializable{
 	}
 	public void setQuerypartitionstmt(String querypartitionstmt) {
 		this.querypartitionstmt = querypartitionstmt;
+	}
+	public int getFetchsize() {
+		return fetchsize;
+	}
+	public void setFetchsize(int fetchsize) {
+		this.fetchsize = fetchsize;
 	}
 	
 //	 public boolean dateRange()

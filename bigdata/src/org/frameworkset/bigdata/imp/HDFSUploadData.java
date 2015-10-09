@@ -147,6 +147,7 @@ public class HDFSUploadData {
 	boolean usepagine = false;
 	boolean adminnodeasdatanode;
 	String jobname;
+	int fetchsize;
 	/**
 	 * 指定需要执行哪几个任务
 	 */
@@ -266,6 +267,8 @@ public class HDFSUploadData {
 		 config.setStartfileNo(startfileNo);
 		 config.startid = this.startid;
 		 config.endid = this.endid;
+		 config.fetchsize = this.fetchsize;
+		 
 		 config.setJobstaticid(jobstaticid);
 		if(this.onejob)
 		{
@@ -505,6 +508,9 @@ public class HDFSUploadData {
 				"limitstatement");
 		String querystatement = context.getStringExtendAttribute(jobname,
 				"querystatement");
+		int fetchsize = context.getIntExtendAttribute(jobname,
+				"fetchsize",0);
+		config.setFetchsize(fetchsize);
 		long tablerows = context
 				.getLongExtendAttribute(jobname, "tablerows", 0);
 		boolean usepagine = context.getBooleanExtendAttribute(jobname,
@@ -2115,6 +2121,9 @@ public class HDFSUploadData {
 				"limitstatement");
 		this.querystatement = context.getStringExtendAttribute(jobname,
 				"querystatement");
+		fetchsize = context.getIntExtendAttribute(jobname,
+				"fetchsize",0);
+		
 		this.countstatement = context.getStringExtendAttribute(jobname,
 				"countstatement");
 		this.pageinestatement = context.getStringExtendAttribute(jobname,
@@ -2911,6 +2920,14 @@ public class HDFSUploadData {
 
 	public void setAddworkthreads(String addworkthreads) {
 		this.addworkthreads = addworkthreads;
+	}
+
+	public int getFetchsize() {
+		return fetchsize;
+	}
+
+	public void setFetchsize(int fetchsize) {
+		this.fetchsize = fetchsize;
 	}
 
 }

@@ -123,7 +123,7 @@ public class DBHelper {
 					 poolsize,
 		        		HDFSUploadData.isUsepool(),
 		        		false,
-		        		null        ,true,false
+		        		null        ,true,false,HDFSUploadData.getFetchsize() 
 		        		);
 		}
  
