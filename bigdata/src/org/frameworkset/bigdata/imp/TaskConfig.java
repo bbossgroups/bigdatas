@@ -124,7 +124,7 @@ public class TaskConfig implements java.io.Serializable{
 		.append("leftjoinby=").append(this.leftJoinby).append(",")
 		.append("rightJoinby=").append(this.rightJoinby).append(",")
 		.append("errorrowslimit=").append(this.errorrowslimit).append(",")
-		
+		.append("fetchsize=").append(this.fetchsize).append(",")
 		.append("usepartition=").append(this.usepartition).append(",");
 		if(this.usepartition)
 		{
