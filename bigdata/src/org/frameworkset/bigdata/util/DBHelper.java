@@ -81,7 +81,7 @@ public class DBHelper {
 		try {
 			SQLExecutor.queryObjectWithDBName(int.class,"bigdata_conf", exist);
 		} catch (Exception e) {
-			log.info("jobconfig table 不存在，创建jobconfig表：create table jobconfig (jobname string, jobdef string,PRIMARY KEY (jobname))。",e);
+			log.info("jobconfig table 不存在，创建jobconfig表：create table jobconfig (jobname string, jobdef string,PRIMARY KEY (jobname))。");
 			try {
 				SQLExecutor.updateWithDBName("bigdata_conf","create table jobconfig (jobname string, jobdef string,PRIMARY KEY (jobname))");
 				log.info("创建jobconfig表成功：create table jobconfig (jobname string, jobdef string,PRIMARY KEY (jobname))。");
@@ -97,7 +97,7 @@ public class DBHelper {
 //				SQLExecutor.updateWithDBName("bigdata_conf","drop table jobstatic ");
 				SQLExecutor.queryObjectWithDBName(int.class,"bigdata_conf", exist);
 			} catch (Exception e) {
-				log.info("jobstatic table 不存在，创建jobconfig表：create table jobstatic (jobstaticid string,jobname string, jobstatic TEXT,savetime number(10), PRIMARY KEY (jobstaticid))。",e);
+				log.info("jobstatic table 不存在，创建jobconfig表：create table jobstatic (jobstaticid string,jobname string, jobstatic TEXT,savetime number(10), PRIMARY KEY (jobstaticid))。");
 				try {
 					SQLExecutor.updateWithDBName("bigdata_conf","create table jobstatic (jobstaticid string,jobname string, jobstatic TEXT,savetime number(10),PRIMARY KEY (jobstaticid))");
 					log.info("创建jobstatic表成功：create table jobstatic (jobstaticid string,jobname string, jobstatic TEXT,savetime number(10), PRIMARY KEY (jobstaticid))。");
