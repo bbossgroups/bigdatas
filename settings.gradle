@@ -1,3 +1,4 @@
 rootProject.name = 'bigdatas'
 include 'bigdata'
+include 'bigdata-web'
 include 'bigdatamonitor'

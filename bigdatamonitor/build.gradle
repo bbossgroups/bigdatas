@@ -17,7 +17,6 @@ sourceSets {
     }
     
 }
-project.tasks.compileJava.dependsOn(project(':bigdata-web').tasks.install)
 dependencies {
     
     
@@ -71,7 +70,7 @@ task copyLibFiles(type: Copy ){
 	from configurations.compile + configurations.providedRuntime 
 	into 'build/dist/gencode/lib'
 }
-project.tasks.copyLibFiles.dependsOn(project(':gencode-web').tasks.install)
+project.tasks.copyLibFiles.dependsOn(project(':bigdata-web').tasks.install)
 task copyResourceFiles(type: Copy ){ 
 	from fileTree(dir: 'resources')
 	into 'build/dist/gencode/resources'
