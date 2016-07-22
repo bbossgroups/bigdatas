@@ -3,3 +3,6 @@
 /build.log
 /bigdata.log
 /velocity.log
+/.settings/
+/.classpath
+/.project

@@ -1,0 +1,3 @@
+rootProject.name = 'bigdatas'
+include 'bigdata'
+include 'bigdatamonitor'
