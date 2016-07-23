@@ -7,14 +7,23 @@ http://yin-bp.iteye.com/
 # 版本构建
 
 切换到命令行模式：
+
 cd D:\bigdatas
+
 如果开发环境为eclipse：
+
 gradle eclipse
+
 如果开发环境为idea：
+
 gradle idea
+
 直接发布版本：
+
 gradle :bigdatamonitor:war
+
 构建发布的版本包存放在目录：
+
 D:\bigdatas\bigdatamonitor\build\distributions
 
 
