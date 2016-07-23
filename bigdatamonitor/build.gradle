@@ -25,6 +25,9 @@ dependencies {
          fileTree(dir: 'lib', include: '**/*.jar'),
          [group: 'com.bbossgroups.bigdata', name: 'bigdata', version: "${version}", transitive: false],
          [group: 'com.bbossgroups.bigdata', name: 'bigdata-web', version: "${version}", transitive: false],
+         [group: 'com.bbossgroups', name: 'bboss-taglib', version: "${PROJ_BBOSS_VERSION}", transitive: false],
+         [group: 'com.bbossgroups', name: 'bboss-htmlparser', version: "${PROJ_BBOSS_VERSION}", transitive: false],
+         
     	)
 	runtime(
 		[group: 'com.bbossgroups', name: 'bboss-rt', version: "${PROJ_BBOSS_VERSION}", transitive: false],
@@ -66,19 +69,20 @@ task warcopyResourceFiles(type: Copy,dependsOn:'warcopyJarFiles' ){
 
 
 task copyLibFiles(type: Copy ){ 
-	from fileTree(dir: '../lib', include: '**/*.jar')
+	//from fileTree(dir: '../lib', include: '**/*.jar')
 	from configurations.compile + configurations.providedRuntime 
-	into 'build/dist/gencode/lib'
+	into 'build/dist/bigdata/lib'
 }
+project.tasks.compileJava.dependsOn(project(':bigdata-web').tasks.install)
 project.tasks.copyLibFiles.dependsOn(project(':bigdata-web').tasks.install)
 task copyResourceFiles(type: Copy ){ 
 	from fileTree(dir: 'resources')
-	into 'build/dist/gencode/resources'
+	into 'build/dist/bigdata/resources'
 }
 
 task copyWebrootFiles(type: Copy ){ 
 	from fileTree(dir: 'WebRoot')
-	into 'build/dist/gencode/WebRoot'
+	into 'build/dist/bigdata/WebRoot'
 }
 task copyToolFiles(type: Copy ){
 	 
@@ -89,14 +93,14 @@ task copyToolFiles(type: Copy ){
 	} 
     from configurations.runtime - configurations.compile - configurations.providedRuntime
     //filteringCharset = 'UTF-8'            
-	into 'build/dist/gencode'
+	into 'build/dist/bigdata'
 	 
 }
  
 task releaseRuntimeZip(type: Zip,dependsOn:['copyToolFiles','copyWebrootFiles','copyResourceFiles','copyLibFiles']) {
     //appendix = 'wrapper'
-   baseName='gencode'
-   from 'build/dist/gencode'
+   baseName='bigdata'
+   from 'build/dist/bigdata'
    
 }
 
@@ -104,7 +108,7 @@ task releaseRuntimeWar(type: Zip,dependsOn:'warcopyResourceFiles') {
     //appendix = 'wrapper'
   // classifier = 'released'
    extension = 'war'
-   baseName='gencode'
+   baseName='bigdata'
    from 'build/dist/WebRoot'
    
 }
