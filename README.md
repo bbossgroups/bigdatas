@@ -4,6 +4,20 @@ http://www.bbossgroups.com
 # bboss group project blog:
 http://yin-bp.iteye.com/
 
+# 版本构建
+
+切换到命令行模式：
+cd D:\bigdatas
+如果开发环境为eclipse：
+gradle eclipse
+如果开发环境为idea：
+gradle idea
+直接发布版本：
+gradle :bigdatamonitor:war
+构建发布的版本包存放在目录：
+D:\bigdatas\bigdatamonitor\build\distributions
+
+
 # bboss大数据抽取工具功能特点如下：
 
 1.实现db到hadoop hdfs数据导入功能，提供高效的分布式并行处理能力，可以采用数据库分区、按字段分区、数据库分区结合字段分区、分页（不建议）四种方式并行批处理抽取db数据到hdfs文件系统中；

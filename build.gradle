@@ -145,6 +145,10 @@ configure(subprojects) { subproject ->
 	    )
 	}
  
+	
+}
+
+configure([project(":bigdata"),project(":bigdata-web")]) { subproject ->
 	ext.uploadtocenter=uploadArchivesToMavenCenter.equals("true")
 	if(uploadtocenter)
 	{
