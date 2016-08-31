@@ -1,4 +1,4 @@
-apply plugin: "war"
+
 sourceSets {
     main {
         java {
@@ -22,7 +22,7 @@ dependencies {
     
     
      compile ( 
-         fileTree(dir: 'lib', include: '**/*.jar'),
+         
          [group: 'com.bbossgroups.bigdata', name: 'bigdata', version: "${version}", transitive: false],
          [group: 'com.bbossgroups.bigdata', name: 'bigdata-web', version: "${version}", transitive: false],
          [group: 'com.bbossgroups', name: 'bboss-taglib', version: "${PROJ_BBOSS_VERSION}", transitive: false],
@@ -33,7 +33,7 @@ dependencies {
 		[group: 'com.bbossgroups', name: 'bboss-rt', version: "${PROJ_BBOSS_VERSION}", transitive: false],
     )
     	
-     providedRuntime (            
+     compileOnly (            
           
             [group: 'javax.servlet', name: 'javax.servlet-api', version: "3.0.1", transitive: false],
             [group: 'javax.servlet', name: 'jsp-api', version: '2.0', transitive: false],
@@ -43,7 +43,7 @@ dependencies {
            [group: 'org.eclipse.jetty.orbit', name: 'org.apache.jasper.glassfish', version: '2.2.2.v201112011158', transitive: false],
           [group: 'org.eclipse.jetty.orbit', name: 'org.apache.taglibs.standard.glassfish', version: '1.2.0.v201112081803', transitive: false],
            [group: 'org.eclipse.jetty.orbit', name: 'com.sun.el', version: '2.2.0.v201108011116', transitive: false],
-           
+           fileTree(dir: 'lib', include: '**/*.jar'),
            
     )
      
@@ -55,7 +55,7 @@ task warcopyWebRootFiles(type: Copy){
 }
 
 task warcopyJarFiles(type: Copy,dependsOn:'warcopyWebRootFiles'){
-	 from configurations.compile + configurations.runtime - configurations.providedRuntime
+	 from configurations.compile + configurations.runtime
 	 into 'build/dist/WebRoot/WEB-INF/lib'
 	 
 }
@@ -70,7 +70,7 @@ task warcopyResourceFiles(type: Copy,dependsOn:'warcopyJarFiles' ){
 
 task copyLibFiles(type: Copy ){ 
 	//from fileTree(dir: '../lib', include: '**/*.jar')
-	from configurations.compile + configurations.providedRuntime 
+	from configurations.compile + configurations.compileOnly 
 	into 'build/dist/bigdata/lib'
 }
 project.tasks.compileJava.dependsOn(project(':bigdata-web').tasks.install)
@@ -91,7 +91,7 @@ task copyToolFiles(type: Copy ){
 		expand(bboss_version: "${PROJ_BBOSS_VERSION}",main_class:'org.frameworkset.bigdata.impl.monitor.JettyStart')
 		
 	} 
-    from configurations.runtime - configurations.compile - configurations.providedRuntime
+    from configurations.runtime - configurations.compile
     //filteringCharset = 'UTF-8'            
 	into 'build/dist/bigdata'
 	 
@@ -112,5 +112,3 @@ task releaseRuntimeWar(type: Zip,dependsOn:'warcopyResourceFiles') {
    from 'build/dist/WebRoot'
    
 }
-
-project.tasks.war.dependsOn(['releaseRuntimeZip','releaseRuntimeWar'])
