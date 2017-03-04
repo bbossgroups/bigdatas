@@ -34,10 +34,10 @@ public class HDFSServer {
 				
 				UserGroupInformation user_ = null;
 				try {
-					log.info("连接hdfs服务器："+hadoop + " use user[root].");
-				 	user_ = UserGroupInformation.getBestUGI(null, "root");
-					UserGroupInformation.setLoginUser(user_);
-					 
+//					log.info("连接hdfs服务器："+hadoop + " use user[root].");
+//				 	user_ = UserGroupInformation.getBestUGI(null, "root");
+//					UserGroupInformation.setLoginUser(user_);
+//					 
 					 
 					URI uri = new URI(hadoop);
 					 
