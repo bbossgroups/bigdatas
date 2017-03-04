@@ -10,17 +10,9 @@ http://yin-bp.iteye.com/
 
 cd D:\bigdatas
 
-如果开发环境为eclipse：
-
-gradle eclipse
-
-如果开发环境为idea：
-
-gradle idea
-
 直接发布版本：
 
-gradle :bigdatamonitor:war
+gradle :bigdatamonitor:releaseRuntime
 
 构建发布的版本包存放在目录：
 
@@ -64,8 +56,11 @@ D:\bigdatas\bigdatamonitor\build\distributions
  9.Jetty：运行监控管理应用模块的web应用容器
  
  10.Bboss应用执行容器：用来启动作业管理监控应用、作业数据处理应用、启动jetty容器
-# bboss大数据抽取工具源码github托管地址：
+# bboss大数据抽取工具源码：
+github托管地址
 https://github.com/bbossgroups/bigdatas
+oschina git地址
+https://git.oschina.net/bboss/bigdatas
 
 # 版本源码和发布包下载地址：
 https://github.com/bbossgroups/bigdatas/releases
