@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.AddWorkthreads;
 import org.frameworkset.bigdata.imp.AddWorkthreadsJob;
 import org.frameworkset.bigdata.imp.ExecutorJob;
@@ -35,6 +34,8 @@ import org.frameworkset.soa.ObjectSerializable;
 import org.frameworkset.spi.BaseApplicationContext;
 import org.frameworkset.spi.DefaultApplicationContext;
 import org.jgroups.Address;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.util.SimpleStringUtil;
 
@@ -44,7 +45,7 @@ import com.frameworkset.util.SimpleStringUtil;
  */
 
 public class ImpStaticManager implements Listener<Object>{
-	private static Logger log = Logger.getLogger(ImpStaticManager.class);
+	private static Logger log = LoggerFactory.getLogger(ImpStaticManager.class);
 	private HashMap<String,JobStatic> localjobstatics = new HashMap<String,JobStatic>();
 	/**
 	 * 用于重新执行作业使用

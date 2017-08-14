@@ -4,12 +4,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.Imp;
 import org.frameworkset.bigdata.imp.monitor.SpecialMonitorObject;
 import org.frameworkset.bigdata.util.DBJobstatic;
 import org.frameworkset.util.annotations.ResponseBody;
 import org.frameworkset.web.servlet.ModelMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.common.poolman.SQLExecutor;
 import com.frameworkset.common.poolman.handle.ResultSetNullRowHandler;
@@ -18,7 +19,7 @@ import com.frameworkset.util.SimpleStringUtil;
 import com.frameworkset.util.StringUtil;
 
 public class JobstaticMonitorController {
-	private static Logger log = Logger
+	private static Logger log = LoggerFactory
 			.getLogger(JobstaticMonitorController.class);
 
 	public String index(String job, ModelMap model) {

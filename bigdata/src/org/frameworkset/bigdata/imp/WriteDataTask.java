@@ -4,7 +4,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.common.poolman.DBUtil;
 import com.frameworkset.common.poolman.NestedSQLException;
@@ -15,7 +16,7 @@ import com.frameworkset.orm.transaction.TransactionManager;
 import com.frameworkset.util.SimpleStringUtil;
 
 public class WriteDataTask {
-	 private static Logger log = Logger.getLogger(WriteDataTask.class);
+	 private static Logger log = LoggerFactory.getLogger(WriteDataTask.class);
 	 BlockingQueue<FileSegment> upfileQueues;
 	 GenFileHelper genFileHelper;
 	 FileSegment fileSegment;

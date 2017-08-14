@@ -11,11 +11,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.monitor.TaskStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileSegment {
-	 private static Logger log = Logger.getLogger(FileSegment.class);
+	 private static Logger log = LoggerFactory.getLogger(FileSegment.class);
 	 boolean closed;
 	 boolean flushed;
 	 ExecutorJob job;

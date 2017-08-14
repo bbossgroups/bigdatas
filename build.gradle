@@ -117,7 +117,7 @@ configure(subprojects) { subproject ->
 	            [group: 'com.bbossgroups.security', name: 'bboss-security', version: "${PROJ_SECURITY_VERSION}", transitive: false],
 	            [group: 'com.bbossgroups.security', name: 'bboss-security-web', version: "${PROJ_SECURITY_VERSION}", transitive: false],
 	            [group: 'com.bbossgroups.security', name: 'bboss-security-web-inf', version: "${PROJ_SECURITY_VERSION}", transitive: false],
-	            [group: 'log4j', name: 'log4j', version: '1.2.17', transitive: false],
+	           
 	            [group: 'oro', name: 'oro', version: '2.0.8', transitive: false],
 	            [group: 'cglib', name: 'cglib-nodep', version: '3.1', transitive: false],
 				[group: 'org.jgroups', name: 'jgroups', version: '4.0.1.Final', transitive: false]     ,
@@ -148,9 +148,9 @@ configure(subprojects) { subproject ->
 	            [group: 'com.fasterxml.uuid', name: 'java-uuid-generator', version: '3.1.2', transitive: false],
 	            [group: 'com.google.protobuf', name: 'protobuf-java', version: '2.5.0', transitive: false],
 	            
-	            [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10', transitive: false],
-	            
-	            [group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.10', transitive: false],
+           	[group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25', transitive: true],
+
+
 	            fileTree(dir: '../lib', include: '**/*.jar'),
 	            [group: 'jstl', name: 'jstl', version: '1.2', transitive: false],
 	            [group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.11.2', transitive: false],

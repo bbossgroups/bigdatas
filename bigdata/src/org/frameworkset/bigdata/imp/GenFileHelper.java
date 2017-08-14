@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.util.DBHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GenFileHelper {
-	private static Logger log = Logger.getLogger(GenFileHelper.class); 
+	private static Logger log = LoggerFactory.getLogger(GenFileHelper.class); 
 	List<Thread> genthreads;
 	List<Thread> upthreads;
 	AtomicInteger genfilecount;

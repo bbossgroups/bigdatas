@@ -2,15 +2,16 @@ package org.frameworkset.bigdata.imp;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.frameworkset.event.Event;
 import org.frameworkset.event.Listener;
 import org.frameworkset.remote.EventUtils;
 import org.jgroups.Address;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HDFSUploadEventHandler implements Listener<Map<String,TaskConfig>>{
 
-	private static Logger log = Logger.getLogger(HDFSUploadEventHandler.class); 
+	private static Logger log = LoggerFactory.getLogger(HDFSUploadEventHandler.class); 
 	@Override
 	public void handle(Event<Map<String, TaskConfig>> e) {
 		

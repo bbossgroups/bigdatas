@@ -3,16 +3,17 @@ package org.frameworkset.bigdata.util;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.HDFSUploadData;
 import org.frameworkset.bigdata.imp.TaskConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.common.poolman.DBUtil;
 import com.frameworkset.common.poolman.SQLExecutor;
 import com.frameworkset.common.poolman.util.SQLUtil;
 
 public class DBHelper {
-	private static Logger log = Logger.getLogger(DBHelper.class);
+	private static Logger log = LoggerFactory.getLogger(DBHelper.class);
 	public static List<String> getAllJobNames() throws Exception
 	{
 		List<String> names = SQLExecutor.queryList(String.class, "select jobname from jobconfig");

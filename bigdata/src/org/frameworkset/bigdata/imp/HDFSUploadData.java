@@ -14,7 +14,6 @@ import java.util.Set;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.monitor.JobStatic;
 import org.frameworkset.bigdata.imp.monitor.SpecialMonitorObject;
 import org.frameworkset.bigdata.util.DBHelper;
@@ -29,6 +28,8 @@ import org.frameworkset.spi.BaseApplicationContext;
 import org.frameworkset.spi.DefaultApplicationContext;
 import org.frameworkset.spi.SOAApplicationContext;
 import org.jgroups.Address;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.common.poolman.DBUtil;
 import com.frameworkset.common.poolman.PreparedDBUtil;
@@ -41,7 +42,7 @@ import com.frameworkset.util.SimpleStringUtil;
 public class HDFSUploadData {
 	public String HADOOP_PATH;
 	
-	private static Logger log = Logger.getLogger(HDFSUploadData.class);
+	private static Logger log = LoggerFactory.getLogger(HDFSUploadData.class);
 
 	public static final SimpleEventType hdfsuploadevent = new SimpleEventType(
 			"hdfsuploadevent");

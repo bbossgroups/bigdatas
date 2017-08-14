@@ -9,15 +9,15 @@ import java.io.PrintStream;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.util.SimpleStringUtil;
 
 
 public class UploadDataTask  implements Runnable
 {
-	 private static Logger log = Logger.getLogger(UploadDataTask.class);
+	 private static Logger log = LoggerFactory.getLogger(UploadDataTask.class);
 	 FileSegment fileSegment;
 	FileSystem fileSystem;
 	public UploadDataTask(FileSystem fileSystem,FileSegment fileSegment)

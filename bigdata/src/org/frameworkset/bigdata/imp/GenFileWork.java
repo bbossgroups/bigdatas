@@ -5,14 +5,15 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.util.SimpleStringUtil;
 
 
 
 public class GenFileWork  implements Runnable{
-	 private static Logger log = Logger.getLogger(GenFileWork.class);
+	 private static Logger log = LoggerFactory.getLogger(GenFileWork.class);
 	BlockingQueue<FileSegment> queue;
 	CyclicBarrier barrier;
 	java.util.concurrent.atomic.AtomicInteger count; 

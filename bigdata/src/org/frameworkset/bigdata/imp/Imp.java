@@ -9,18 +9,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.monitor.ImpStaticManager;
 import org.frameworkset.bigdata.util.DBHelper;
 import org.frameworkset.event.EventType;
 import org.frameworkset.event.NotifiableFactory;
 import org.frameworkset.spi.BaseApplicationContext;
 import org.frameworkset.spi.SOAApplicationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.util.SimpleStringUtil;
 
 public class Imp {
-	private static Logger log = Logger.getLogger(Imp.class);
+	private static Logger log = LoggerFactory.getLogger(Imp.class);
 	private static File appdir;
 	private static Map<String,String> parserParams(String params_)
 	{

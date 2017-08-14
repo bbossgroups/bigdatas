@@ -8,15 +8,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.log4j.Logger;
 import org.frameworkset.bigdata.imp.monitor.JobStatic;
 import org.frameworkset.bigdata.imp.monitor.TaskStatus;
 import org.frameworkset.bigdata.util.DBHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.frameworkset.util.SimpleStringUtil;
 
 public class ExecutorJob {
-	private static Logger log = Logger.getLogger(ExecutorJob.class); 
+	private static Logger log = LoggerFactory.getLogger(ExecutorJob.class); 
 	 private BlockingQueue<FileSegment> genfileQueues = null; 
 	 private BlockingQueue<FileSegment> upfileQueues = null; 
 	 FileSystem fileSystem=null;
