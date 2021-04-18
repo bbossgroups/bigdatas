@@ -21,7 +21,7 @@ dependencies {
     
     
     
-     compile ( 
+     api (
          
          [group: 'com.bbossgroups.bigdata', name: 'bigdata', version: "${version}", transitive: false],
          [group: 'com.bbossgroups.bigdata', name: 'bigdata-web', version: "${version}", transitive: false],
@@ -30,7 +30,7 @@ dependencies {
          [group: 'mysql', name: 'mysql-connector-java', version: '5.1.39', transitive: false],
          
     	)
-	runtime(
+	runtimeOnly(
 		[group: 'com.bbossgroups', name: 'bboss-rt', version: "${PROJ_BBOSS_VERSION}", transitive: false],
     )
     	
@@ -56,7 +56,13 @@ task warcopyWebRootFiles(type: Copy){
 }
 
 task warcopyJarFiles(type: Copy,dependsOn:'warcopyWebRootFiles'){
-	 from configurations.compile + configurations.runtime
+	 from configurations.api{
+		 canBeResolved=true
+
+	 } + configurations.runtimeOnly{
+		 canBeResolved=true
+
+	 }
 	 into 'build/dist/WebRoot/WEB-INF/lib'
 	 
 }
@@ -71,11 +77,17 @@ task warcopyResourceFiles(type: Copy,dependsOn:'warcopyJarFiles' ){
 
 task copyLibFiles(type: Copy ){ 
 	//from fileTree(dir: '../lib', include: '**/*.jar')
-	from configurations.compile + configurations.compileOnly 
+	from configurations.api{
+		canBeResolved=true
+
+	} + configurations.compileOnly{
+		canBeResolved=true
+
+	}
 	into 'build/dist/bigdata/lib'
 }
-project.tasks.compileJava.dependsOn(project(':bigdata-web').tasks.install)
-project.tasks.copyLibFiles.dependsOn(project(':bigdata-web').tasks.install)
+project.tasks.compileJava.dependsOn(project(':bigdata-web').tasks.publishToMavenLocal)
+project.tasks.copyLibFiles.dependsOn(project(':bigdata-web').tasks.publishToMavenLocal)
 task copyResourceFiles(type: Copy ){ 
 	from fileTree(dir: 'resources')
 	into 'build/dist/bigdata/resources'
@@ -92,7 +104,7 @@ task copyToolFiles(type: Copy ){
 		expand(bboss_version: "${PROJ_BBOSS_VERSION}",main_class:'org.frameworkset.bigdata.impl.monitor.JettyStart')
 		
 	} 
-    from configurations.runtime - configurations.compile
+    from configurations.runtimeOnly - configurations.api
     //filteringCharset = 'UTF-8'            
 	into 'build/dist/bigdata'
 	 
@@ -100,7 +112,7 @@ task copyToolFiles(type: Copy ){
  
 task releaseRuntimeZip(type: Zip,dependsOn:['copyToolFiles','copyWebrootFiles','copyResourceFiles','copyLibFiles']) {
     //appendix = 'wrapper'
-   baseName='bigdata'
+	archiveBaseName='bigdata'
    from 'build/dist/bigdata'
    
 }
@@ -108,8 +120,8 @@ task releaseRuntimeZip(type: Zip,dependsOn:['copyToolFiles','copyWebrootFiles','
 task releaseRuntimeWar(type: Zip,dependsOn:'warcopyResourceFiles') {
     //appendix = 'wrapper'
   // classifier = 'released'
-   extension = 'war'
-   baseName='bigdata'
+	archiveExtension = 'war'
+	archiveBaseName='bigdata'
    from 'build/dist/WebRoot'
    
 }
