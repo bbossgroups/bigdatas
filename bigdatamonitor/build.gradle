@@ -31,7 +31,7 @@ dependencies {
          
     	)
 	runtimeOnly(
-		[group: 'com.bbossgroups', name: 'bboss-rt', version: "${PROJ_BBOSS_VERSION}", transitive: false],
+			[group: 'com.bbossgroups', name: 'bboss-bootstrap-rt', version: "${PROJ_BBOSS_VERSION}", transitive: true],
     )
     	
      compileOnly (            
