@@ -27,7 +27,7 @@ dependencies {
          [group: 'com.bbossgroups.bigdata', name: 'bigdata-web', version: "${version}", transitive: false],
          [group: 'com.bbossgroups', name: 'bboss-taglib', version: "${PROJ_BBOSS_VERSION}", transitive: false],
          [group: 'com.bbossgroups', name: 'bboss-htmlparser', version: "${PROJ_BBOSS_VERSION}", transitive: false],
-         [group: 'mysql', name: 'mysql-connector-java', version: '5.1.39', transitive: false],
+         [group: 'mysql', name: 'mysql-connector-java', version: '8.0.28', transitive: false],
          
     	)
 	runtimeOnly(
