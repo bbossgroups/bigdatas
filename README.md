@@ -18,6 +18,13 @@ gradle :bigdatamonitor:releaseRuntime
 
 D:\bigdatas\bigdatamonitor\build\distributions
 
+# 发布源码版本
+
+gradle clean publishToMavenLocal
+
+需要通过gradle构建发布版本,gradle安装配置参考文档：
+
+https://esdoc.bbossgroups.com/#/bboss-build
 
 # bboss大数据抽取工具功能特点如下：
 
