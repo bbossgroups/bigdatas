@@ -1,19 +1,14 @@
 package org.frameworkset.bigdata.imp;
 
-import java.sql.ResultSet;
+import com.frameworkset.common.poolman.SQLExecutor;
+
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
-
-import com.frameworkset.common.poolman.PreparedDBUtil;
-import com.frameworkset.common.poolman.SQLExecutor;
-import com.frameworkset.common.poolman.handle.ResultSetNullRowHandler;
-import com.frameworkset.common.poolman.util.SQLUtil;
 
 public class Solver {
 	int N;
@@ -141,9 +136,9 @@ public class Solver {
 //			 
 //		}
 //		
-//	}, "test", "select min(dt) s,max(dt) e from  QZJIEM.OLD_SANY_QZJ_RESULT  PARTITION  (TP_SANY_QZJ_RESULT_201208)");
+//	}, "test", "select min(dt) s,max(dt) e from  QZJIEM.OLD_s_QZJ_RESULT  PARTITION  (TP_s_QZJ_RESULT_201208)");
 //		PreparedDBUtil db = new PreparedDBUtil();
-//		db.preparedSelect("test", "select min(dt) s,max(dt) e from  QZJIEM.OLD_SANY_QZJ_RESULT  PARTITION  (TP_SANY_QZJ_RESULT_201208)");
+//		db.preparedSelect("test", "select min(dt) s,max(dt) e from  QZJIEM.OLD_s_QZJ_RESULT  PARTITION  (TP_s_QZJ_RESULT_201208)");
 //		db.executePrepared();	
 //		double dd = 1.30020034599143E-115;
 //		System.out.println(oracle.sql.NUMBER.toText(dd));
@@ -238,11 +233,11 @@ public class Solver {
 				c.add(Calendar.DAY_OF_MONTH, 1);
 				date = new Timestamp(c.getTimeInMillis());
 				System.out.println(date);
-				SQLExecutor.insertWithDBName("test", "insert into OLD_SANY_QZJ_RESULT(GKID,VECHILENO,DT) values(?,?,?)",start + i,partname+i, date);
+				SQLExecutor.insertWithDBName("test", "insert into OLD_s_QZJ_RESULT(GKID,VECHILENO,DT) values(?,?,?)",start + i,partname+i, date);
 			}
 			else
 			{
-				SQLExecutor.insertWithDBName("test", "insert into OLD_SANY_QZJ_RESULT(GKID,VECHILENO,DT) values(?,?,?)",start + i,partname+i, date);
+				SQLExecutor.insertWithDBName("test", "insert into OLD_s_QZJ_RESULT(GKID,VECHILENO,DT) values(?,?,?)",start + i,partname+i, date);
 			}
 				
 		}
