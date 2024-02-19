@@ -130,7 +130,7 @@ configure(subprojects) { subproject ->
 	            [group: 'org.apache.hadoop', name: 'hadoop-hdfs', version: "${hadoop_version}", transitive: false],
 	            [group: 'org.apache.hadoop', name: 'hadoop-hdfs-nfs', version: "${hadoop_version}", transitive: false],
 	            [group: 'org.apache.htrace', name: 'htrace-core', version: '3.1.0-incubating', transitive: false],
-	            [group: 'com.fasterxml.uuid', name: 'java-uuid-generator', version: '3.1.2', transitive: false],
+	            [group: 'com.fasterxml.uuid', name: 'java-uuid-generator', version: '4.3.0', transitive: false],
 	            [group: 'com.google.protobuf', name: 'protobuf-java', version: '2.5.0', transitive: false],
 	            
 
