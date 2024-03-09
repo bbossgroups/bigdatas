@@ -22,12 +22,10 @@ sourceSets {
 
     
 }
-project.tasks.compileJava.dependsOn(project(':bigdata').tasks.publishToMavenLocal)
+//project.tasks.compileJava.dependsOn(project(':bigdata').tasks.publishToMavenLocal)
 dependencies {
-    api (
-            [group: 'com.bbossgroups.bigdata', name: 'bigdata', version: "${version}", transitive: false],
-            
-    )
+    api project(":bigdata")
+
    
   	
     api (
