@@ -25,7 +25,7 @@ dependencies {
          
          [group: 'com.bbossgroups', name: 'bboss-taglib', version: "${PROJ_BBOSS_VERSION}", transitive: false],
          [group: 'com.bbossgroups', name: 'bboss-htmlparser', version: "${PROJ_BBOSS_VERSION}", transitive: false],
-         [group: 'mysql', name: 'mysql-connector-java', version: '8.0.33', transitive: false],
+             [group: 'com.mysql', name: 'mysql-connector-j', version: '9.1.0', transitive: false],
          
     	)
 	runtimeOnly(
