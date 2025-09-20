@@ -47,82 +47,94 @@ dependencies {
     )
      
 }
-task warcopyWebRootFiles(type: Copy){
-	 from 'WebRoot'
-	 into 'build/dist/WebRoot'
-	 
+tasks.register('warcopyWebRootFiles', Copy) {
+    from 'WebRoot'
+    into 'build/dist/WebRoot'
+
+}
+// 创建可解析的配置
+configurations {
+    apiResolvable {
+        canBeResolved = true
+        extendsFrom api
+    }
+    compileOnlyResolvable {
+        canBeResolved = true
+        extendsFrom compileOnly
+    }
+
+    runtimeOnlyResolvable {
+        canBeResolved = true
+        extendsFrom runtimeOnly
+    }
+}
+tasks.register('warcopyJarFiles', Copy) {
+    dependsOn 'warcopyWebRootFiles'
+    from configurations.apiResolvable {
+
+    } + configurations.runtimeOnlyResolvable {
+
+    }
+    into 'build/dist/WebRoot/WEB-INF/lib'
+
 }
 
-task warcopyJarFiles(type: Copy,dependsOn:'warcopyWebRootFiles'){
-	 from configurations.api{
-		 canBeResolved=true
+tasks.register('warcopyResourceFiles', Copy) {
+    dependsOn 'warcopyJarFiles'
 
-	 } + configurations.runtimeOnly{
-		 canBeResolved=true
+    from 'resources'
+    into 'build/dist/WebRoot/WEB-INF/classes'
 
-	 }
-	 into 'build/dist/WebRoot/WEB-INF/lib'
-	 
-}
-
-task warcopyResourceFiles(type: Copy,dependsOn:'warcopyJarFiles' ){
-	 
-	 from 'resources'   
-	into 'build/dist/WebRoot/WEB-INF/classes'
-	 
 }
 
 
-task copyLibFiles(type: Copy ){ 
-	//from fileTree(dir: '../lib', include: '**/*.jar')
-	from configurations.api{
-		canBeResolved=true
-
-	} + configurations.compileOnly{
-		canBeResolved=true
-
-	}
-	into 'build/dist/bigdata/lib'
+tasks.register('copyLibFiles', Copy) {
+    //from fileTree(dir: '../lib', include: '**/*.jar')
+    from configurations.runtimeClasspath
+    into 'build/dist/bigdata/lib'
 }
 project.tasks.compileJava.dependsOn(project(':bigdata-web').tasks.publishToMavenLocal)
 project.tasks.copyLibFiles.dependsOn(project(':bigdata-web').tasks.publishToMavenLocal)
-task copyResourceFiles(type: Copy ){ 
-	from fileTree(dir: 'resources')
-	into 'build/dist/bigdata/resources'
+tasks.register('copyResourceFiles', Copy) {
+    from fileTree(dir: 'resources')
+    into 'build/dist/bigdata/resources'
 }
 
-task copyWebrootFiles(type: Copy ){ 
-	from fileTree(dir: 'WebRoot')
-	into 'build/dist/bigdata/WebRoot'
+tasks.register('copyWebrootFiles', Copy) {
+    from fileTree(dir: 'WebRoot')
+    into 'build/dist/bigdata/WebRoot'
 }
-task copyToolFiles(type: Copy ){
-	 
-	from ('runtime')
-	{
-		expand(bboss_version: "${PROJ_BBOSS_VERSION}",main_class:'org.frameworkset.bigdata.impl.monitor.JettyStart')
-		
-	} 
+tasks.register('copyToolFiles', Copy) {
+
+    from('runtime')
+            {
+                expand(bboss_version: "${PROJ_BBOSS_VERSION}", main_class: 'org.frameworkset.bigdata.impl.monitor.JettyStart')
+
+            }
     from configurations.runtimeOnly - configurations.api
     //filteringCharset = 'UTF-8'            
-	into 'build/dist/bigdata'
-	 
-}
- 
-task releaseRuntimeZip(type: Zip,dependsOn:['copyToolFiles','copyWebrootFiles','copyResourceFiles','copyLibFiles']) {
-    //appendix = 'wrapper'
-	archiveBaseName='bigdata'
-   from 'build/dist/bigdata'
-   
+    into 'build/dist/bigdata'
+
 }
 
-task releaseRuntimeWar(type: Zip,dependsOn:'warcopyResourceFiles') {
+tasks.register('releaseRuntimeZip', Zip) {
+    dependsOn 'copyToolFiles', 'copyWebrootFiles', 'copyResourceFiles', 'copyLibFiles'
     //appendix = 'wrapper'
-  // classifier = 'released'
-	archiveExtension = 'war'
-	archiveBaseName='bigdata'
-   from 'build/dist/WebRoot'
-   
+    archiveBaseName = 'bigdata'
+    from 'build/dist/bigdata'
+
 }
 
-task releaseRuntime(dependsOn:['releaseRuntimeWar','releaseRuntimeZip']){
+tasks.register('releaseRuntimeWar', Zip) {
+    dependsOn 'warcopyResourceFiles'
+    //appendix = 'wrapper'
+    // classifier = 'released'
+    archiveExtension = 'war'
+    archiveBaseName = 'bigdata'
+    from 'build/dist/WebRoot'
+
+}
+
+tasks.register('releaseRuntime') {
+    dependsOn 'releaseRuntimeWar', 'releaseRuntimeZip'
 }
