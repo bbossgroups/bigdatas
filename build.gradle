@@ -68,10 +68,9 @@ configure(allprojects) { project ->
 	}
 	if(project.getProperty('skipTest').equals("true"))
 	{
-		compileTestJava.enabled=false
-		processTestResources.enabled=false
-		testClasses.enabled = false
-		test.enabled = false  
+        tasks.withType(Test) {
+            enabled = false
+        }
 	}
 }
 
@@ -115,7 +114,7 @@ configure(subprojects) { subproject ->
 	            [group: 'org.apache.commons', name: 'commons-compress', version: '1.4.1', transitive: false],
 	            [group: 'commons-configuration', name: 'commons-configuration', version: '1.6', transitive: false],
 	            [group: 'commons-daemon', name: 'commons-daemon', version: '1.0.13', transitive: false],
-	            [group: 'commons-io', name: 'commons-io', version: '2.4', transitive: false],
+	            [group: 'commons-io', name: 'commons-io', version: '2.20.0', transitive: false],
 	            [group: 'commons-digester', name: 'commons-digester', version: '1.8', transitive: false],
 	            [group: 'org.apache.commons', name: 'commons-math3', version: '3.1.1', transitive: false],
 	            [group: 'commons-net', name: 'commons-net', version: '3.1', transitive: false],
