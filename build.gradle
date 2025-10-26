@@ -136,7 +136,7 @@ configure(subprojects) { subproject ->
 
 	            fileTree(dir: '../lib', include: '**/*.jar'),
 	            [group: 'jstl', name: 'jstl', version: '1.2', transitive: false],
-	            [group: 'org.xerial', name: 'sqlite-jdbc', version: '3.45.1.0', transitive: false],
+	            [group: 'org.xerial', name: 'sqlite-jdbc', version: '3.50.3.0', transitive: false],
 	    )
 	}
  
